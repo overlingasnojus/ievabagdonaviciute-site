@@ -1,7 +1,7 @@
 # ievabagdonaviciute.com
 
 Plain HTML + CSS rebuild of the original WordPress/Elementor site. No build step, no framework, no jQuery.
-At 1440px wide, every section matches the original's layout to the pixel.
+The CSS mirrors the Elementor settings (percent widths, vh heights, 1024/767 breakpoints), so the layout matches the original at every screen width, not just desktop. Like the original, only the home page has the logo header.
 
 ## Structure
 
@@ -11,14 +11,14 @@ blog-posts/index.html              Blog list
 what-effective-leadership-…/       Post 1   (same URL slugs as WordPress)
 digital-marketing-is-…/            Post 2
 assets/css/style.css               All styles (one file, commented by section)
-assets/img/                        Images (filled by the script below)
+assets/img/                        Images + the same srcset size variants the original serves
 download-images.sh                 One-time image pull from the live WP site
 ```
 
 ## First run
 
 ```bash
-bash download-images.sh   # pulls all 16 images into assets/img/ (do this before WP goes offline)
+bash download-images.sh   # pulls all 54 image files (16 images + srcset variants) into assets/img/ (do this before WP goes offline)
 git init && git add . && git commit -m "Static rebuild"
 ```
 

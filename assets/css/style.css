@@ -1,6 +1,8 @@
 /* ==========================================================================
    Ieva Bagdonaviciute — portfolio
-   Plain CSS rebuild of the original Elementor site (pixel-matched at 1440px)
+   Plain CSS rebuild of the original Elementor site. Values mirror the
+   Elementor settings (percent widths, vh heights, 1024/767 breakpoints) so
+   the layout tracks the original at every screen width.
    ========================================================================== */
 
 :root {
@@ -78,7 +80,7 @@ b, strong { font-weight: 700; }
 }
 
 /* button */
-.btn-wrap { padding: 15px 0; }
+.btn-wrap { padding: 30px 0 0; }
 .btn {
   display: inline-block;
   padding: 15px 30px;
@@ -94,21 +96,22 @@ b, strong { font-weight: 700; }
 .rounded { border-radius: 10px; width: 100%; }
 
 /* ==========================================================================
-   Header
+   Header (home only — the inner pages have none)
    ========================================================================== */
 .site-header { padding: 40px 20px; }
-.site-header .logo { display: block; width: 57px; margin: 0 auto; }
-.site-header .logo svg { display: block; width: 100%; height: auto; }
+.site-header .logo { display: block; max-width: var(--container); margin: 0 auto; text-align: center; }
+/* inline in a 24px line box, like Elementor's image widget */
+.site-header .logo svg { display: inline-block; vertical-align: middle; width: 5%; height: auto; }
 
 /* ==========================================================================
    Home: hero
    ========================================================================== */
-.hero { min-height: 630px; padding: 80px 0 50px; }
+.hero { min-height: 70vh; padding: 80px 0 50px; }
 .hero .wrap { align-items: center; }
-.hero-intro { max-width: 581px; text-align: center; color: #fff; padding-bottom: 10px; }
-.hero-photo { width: 312px; border-radius: 10px; margin: 20px 0 30px; }
+.hero-intro { width: 51%; text-align: center; color: #fff; margin-top: 10px; }
+.hero-photo { width: min(312px, 39%); border-radius: 10px; margin: 20px 0 30px; }
 
-.lottie { min-height: 225px; }
+.lottie { min-height: 25vh; }
 .lottie .wrap { align-items: center; }
 .lottie dotlottie-player { width: 70px; height: 70px; display: block; }
 
@@ -117,30 +120,30 @@ b, strong { font-weight: 700; }
    ========================================================================== */
 .about { padding: 100px 0; }
 .about .wrap { flex-direction: row; gap: 0; }
-.about .col { flex: 1 1 50%; }
-.about .w-422 { max-width: 422px; }
-.about .w-496 { max-width: 496px; }
+.about .col { flex: 0 0 50%; }
+.about .w-422 { max-width: 74%; }
+.about .w-496 { max-width: 87%; }
 .about .t-section { color: var(--dark); }
 
 /* ==========================================================================
    Experience
    ========================================================================== */
 .section-head { padding: 100px 0 0; }
-.cv-link { font: 500 18px/1 var(--font); color: #fff; }
+.cv-link { font: 500 18px/1 var(--font); color: #fff; text-decoration: underline; }
 
 .exp-row .wrap {
-  flex-direction: row;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: start;
 }
-.exp-row .col { flex: 0 0 calc(50% - 10px); }
 .exp-row.pad-a { padding: 30px 0 60px; }
 .exp-row.pad-b { padding: 20px 0 60px; }
 .exp-row.pad-c { padding: 20px 0 100px; }
 
 .job-title,
-.job-meta { max-width: 487px; }
-.caption  { max-width: 487px; }
-.caption.wide { max-width: 504px; }
+.job-meta,
+.caption  { max-width: 87%; }
+.caption.wide { max-width: 90%; }
 
 .bullets {
   display: flex;
@@ -149,16 +152,15 @@ b, strong { font-weight: 700; }
   padding: 10px 0 10px 30px;
   border-left: 3px solid var(--accent);
 }
-.bullets p { max-width: 458px; }
+.bullets p { max-width: 87%; }
 
 /* ==========================================================================
    Projects / Coursework (3 columns)
    ========================================================================== */
-.three .wrap { flex-direction: row; }
-.three .col  { flex: 0 0 calc((100% - 40px) / 3); }
+.three .wrap { display: grid; grid-template-columns: repeat(3, 1fr); }
 .three.pad { padding: 20px 0 100px; }
-.three .w-312 { max-width: 312px; }
-.three .w-319 { max-width: 319px; }
+.three .w-312 { max-width: 85%; }
+.three .w-319 { max-width: 87%; }
 
 .light .t-section,
 .light .t-sub,
@@ -170,43 +172,46 @@ b, strong { font-weight: 700; }
    Free time
    ========================================================================== */
 .free-a { padding: 30px 0 60px; }
-.free-a .wrap { flex-direction: row; }
-.free-a .col  { flex: 0 0 calc(50% - 10px); }
+.free-a .wrap { display: grid; grid-template-columns: repeat(2, 1fr); }
 .free-a .text { justify-content: center; }
-.free-a .text p { max-width: 370px; }
+.free-a .text p { max-width: 66%; }
 
 .free-b { padding: 50px 0 60px; }
 .free-b .wrap { flex-direction: row; gap: 0; }
-.free-b .collage-col { flex: 0 0 48.86%; }
+/* both columns ask for 100% and shrink, as the Elementor containers do */
+.free-b .col { flex: 0 1 100%; }
 .free-b .text {
-  flex: 1 1 auto;
   justify-content: flex-end;
   padding-left: 50px;
 }
-.free-b .text p { max-width: 448px; line-height: 32px; }
+.free-b .text p { max-width: 84%; line-height: 32px; }
 
-/* collages — positions are % of the column so they scale */
-.collage { position: relative; width: 100%; }
+/* collages — the main photo sets the height; the others float at fixed offsets */
+.collage { position: relative; }
 .collage img { border-radius: 10px; }
 .collage .main { margin: 0 auto; }
 .collage .float { position: absolute; z-index: 1; }
 
-.collage.sing { aspect-ratio: 560 / 360; }
-.collage.sing .main  { width: 65%; }
-.collage.sing .f1    { width: 47.32%; top: 35.83%; left: -13.21%; }
-.collage.sing .f2    { width: 45.36%; top: 64.17%; left: 50.89%; }
+.collage.sing .main { width: 65%; }
+.collage.sing .f1   { width: 265px; top: 129px; left: -74px; }
+.collage.sing .f2   { width: 254px; top: 231px; right: 21px; }
 
-.collage.hike { aspect-ratio: 557 / 300; }
-.collage.hike .main  { width: 72%; }
-.collage.hike .f1    { width: 42%; top: 49.67%; left: -8.08%; }
-.collage.hike .f2    { width: 49.19%; top: 20.67%; right: 0; }
+.collage.hike .main { width: 72%; }
+.collage.hike .f1   { width: 234px; top: 149px; left: -45px; }
+.collage.hike .f2   { width: 274px; top: 62px; right: 0; }
 
 /* ==========================================================================
    Contact
    ========================================================================== */
-.contact { min-height: 630px; padding: 100px 0 50px; display: flex; }
+.contact {
+  min-height: 70vh;
+  padding: 100px 0 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .contact .wrap { justify-content: center; align-items: center; }
-.contact .t-body { text-align: center; color: #fff; padding-bottom: 10px; }
+.contact .t-body { width: 51%; text-align: center; color: #fff; margin-top: 10px; }
 .contact.compact { min-height: 0; padding: 200px 0; }
 
 .social { display: flex; gap: 5px; justify-content: center; }
@@ -221,7 +226,7 @@ b, strong { font-weight: 700; }
   transition: transform .3s;
 }
 .social a:hover { transform: translateY(-8px); }
-.social svg { width: 25px; height: 25px; fill: currentColor; }
+.social svg { width: 25px; height: 25px; fill: var(--accent); }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
@@ -236,13 +241,13 @@ b, strong { font-weight: 700; }
 .blog-grid { padding: 100px 0; }
 .blog-grid .wrap { max-width: 1200px; }
 .cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   padding: 10px;
 }
 .card {
   position: relative;
-  flex: 1 1 0;
   min-height: 400px;
   padding: 50px 50px 36px 36px;
   border-radius: 16px;
@@ -261,8 +266,8 @@ b, strong { font-weight: 700; }
   background: linear-gradient(rgba(0, 0, 0, .36) 0%, #000 100%);
 }
 .card > * { position: relative; }
-.card h2 { font: 600 24px/1.4 var(--font); color: #fff; }
-.card p  { font: 400 16px/24px var(--font); color: rgba(255, 255, 255, .84); }
+.card h2 { font: 600 24px/1.4em var(--font); color: #fff; }
+.card p  { font: 400 16px/1.5 var(--font); color: rgba(255, 255, 255, .84); }
 .card .btn-wrap { padding: 0; }
 
 /* ==========================================================================
@@ -270,8 +275,7 @@ b, strong { font-weight: 700; }
    ========================================================================== */
 .post-hero {
   position: relative;
-  min-height: 415px;
-  padding: 160px 20px 0;
+  padding: 160px 0;
   background-color: var(--dark);
   background-size: cover;
   background-position: center;
@@ -286,76 +290,93 @@ b, strong { font-weight: 700; }
   position: relative;
   max-width: 1000px;
   margin: 0 auto;
-  font: 600 34px/1.4 var(--font);
+  font: 600 34px/1.4em var(--font);
   color: #fff;
-  text-align: center;
 }
 
 .post-body { padding: 100px 0; }
 .post-body .wrap { max-width: 1000px; padding: 10px; }
-.post-body p { font: 400 16px/24px var(--font); color: rgba(0, 0, 0, .84); }
-.post-body .ref-label { font-weight: 500; }
+.post-body p { font: 400 16px/1.5 var(--font); color: rgba(0, 0, 0, .84); }
+.post-body .ref-cite { font-weight: 500; font-style: italic; }
 
 /* ==========================================================================
-   Responsive
+   Responsive — Elementor's mobile breakpoint
    ========================================================================== */
-@media (max-width: 1180px) {
-  .wrap { padding-left: 20px; padding-right: 20px; }
-  .blog-grid .wrap { padding-left: 10px; padding-right: 10px; }
-}
-
 @media (max-width: 767px) {
-  .site-header .logo { width: 11%; min-width: 40px; }
+  .wrap { padding-left: 20px; padding-right: 20px; }
+
+  /* Elementor's wrapping flex row clips the logo's line box to 24px */
+  .site-header .logo { height: 24px; }
+  .site-header .logo svg { width: 11%; }
 
   .hero { min-height: 60vh; padding: 50px 0 40px; }
-  .t-hero { font-size: 36px; line-height: 1.2; }
-  .hero-intro { max-width: 294px; font-size: 12px; }
-  .hero-photo { width: 90%; max-width: 312px; }
+  .t-hero { font-size: 36px; line-height: 1.2em; }
+  .hero .hero-intro { width: 294px; max-width: 100%; font-size: 12px; }
+  .hero-photo { width: 90%; }
   .lottie { min-height: 20vh; }
+  .lottie .wrap { padding: 0; }
 
-  .t-section { font-size: 30px; line-height: 1.2; }
+  .t-section { font-size: 30px; line-height: 1.2em; }
+  .section-head.light .t-section { font-size: 28px; }
+  .t-sub { line-height: 1.2em; }
   .t-body, .t-list { font-size: 14px; }
   .divider { padding: 2px 0; }
-  .cv-link { font-size: 16px; line-height: 1.2; }
+  #projects .divider { padding: 15px 0; }
+  .cv-link { font-size: 16px; line-height: 1.2em; }
 
   .about { padding: 70px 0; }
-  .about .wrap,
-  .exp-row .wrap,
-  .three .wrap,
-  .free-a .wrap,
-  .free-b .wrap,
-  .cards { flex-direction: column; }
-  .about .wrap { gap: 50px; }
+  .about .wrap { flex-direction: column; }
+  .about .col { flex-basis: auto; }
+  .about .col + .col .t-section { margin-top: 30px; }
   .about .w-422, .about .w-496,
-  .job-title, .job-meta, .caption, .caption.wide,
-  .three .w-312, .three .w-319 { max-width: 294px; }
+  .caption, .caption.wide, .bullets p,
+  .three .w-312, .three .w-319 { max-width: 100%; }
+  .about .w-422, .about .w-496,
+  .job-title, .job-meta,
+  .bullets .m-294, .three .m-294 { max-width: 294px; }
 
   .section-head { padding: 70px 0 0; }
+  .exp-row .wrap,
+  .three .wrap,
+  .free-a .wrap { grid-template-columns: 1fr; }
   .exp-row.pad-a, .exp-row.pad-b { padding: 20px 0 30px; }
   .exp-row.pad-c { padding: 20px 0 70px; }
   .three.pad { padding: 20px 0 70px; }
 
-  .collage.sing .f1 { left: 0; }
-  .collage.hike .f1 { left: 0; }
-  .free-a .col, .free-b .collage-col { flex-basis: auto; }
-  /* floating photos hang below the collage box; reserve room for them */
-  .free-a .collage-col { margin-bottom: 30%; }
-  .free-b .collage-col { margin-bottom: 36%; }
-  .free-a .text { order: -1; }
+  .free-a { padding: 20px 0 30px; }
+  .free-a .text p, .free-b .text p { max-width: 100%; }
+  .t-hand { font-size: 22px; }
+  .free-b { padding: 60px 0 30px; }
+  .free-b .wrap { flex-direction: column-reverse; }
+  .free-b .col { flex-basis: auto; }
   .free-b .text { padding-left: 0; }
-  .t-hand { font-size: 22px; line-height: 1.3; }
-  .free-b .text p { line-height: 1.3; }
 
-  .contact { min-height: 0; padding: 70px 0; }
-  .t-hero.contact-title { font-size: 36px; }
-  .contact.compact { padding: 100px 0; }
+  .collage.sing { padding-top: 20px; }
+  .collage.sing .main { width: 57%; }
+  .collage.sing .f1   { width: 157px; top: 142px; left: -4px; }
+  .collage.sing .f2   { width: 130px; top: 134px; }
+  .collage.hike { padding-top: 30px; }
+  .collage.hike .main { width: 77%; }
+  .collage.hike .f1   { width: 141px; top: 147px; left: -4px; }
+  .collage.hike .f2   { width: 145px; top: 122px; }
 
-  .page-hero { padding: 100px 0; }
-  .blog-grid { padding: 60px 0; }
-  .card { padding: 36px 30px 30px; min-height: 360px; }
+  .contact { min-height: 60vh; padding: 100px 0 20px; }
+  .t-hero.contact-title { font-size: 34px; }
+  .contact .t-body { width: 294px; max-width: 100%; font-size: 12px; }
+  .contact.compact { min-height: 60vh; padding: 100px 0 20px; }
 
-  .post-hero { min-height: 300px; padding-top: 110px; }
-  .post-hero h1 { font-size: 26px; }
-  .post-body { padding: 60px 0; }
-  .post-body p { font-size: 15px; }
+  .page-hero { padding: 100px 0 60px; }
+  .page-hero h1 { font-size: 24px; line-height: 1.2em; }
+  .blog-grid { padding: 50px 0; }
+  .blog-grid .wrap { padding-left: 24px; padding-right: 24px; }
+  .cards { grid-template-columns: 1fr; padding: 0; }
+  .card { padding: 0 20px 24px 24px; }
+  .card h2 { font-size: 16px; }
+  .card p, .card .btn { font-size: 14px; }
+
+  .post-hero { padding: 100px 20px 60px; }
+  .post-hero h1 { font-size: 23px; }
+  .post-body { padding: 50px 0; }
+  .post-body .wrap { padding: 0 24px; }
+  .post-body p { font-size: 14px; }
 }
