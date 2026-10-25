@@ -1,0 +1,361 @@
+/* ==========================================================================
+   Ieva Bagdonaviciute — portfolio
+   Plain CSS rebuild of the original Elementor site (pixel-matched at 1440px)
+   ========================================================================== */
+
+:root {
+  --dark: #0e1013;
+  --accent: #009fbb;
+  --light: #f5f8fa;
+  --white: #fff;
+  --text-dark: rgba(0, 0, 0, .81);
+  --muted-white: rgba(255, 255, 255, .64);
+  --caption-white: rgba(255, 255, 255, .77);
+  --font: "Montserrat", sans-serif;
+  --hand: "Delicious Handrawn", sans-serif;
+  --container: 1140px;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, p, ul, ol { margin: 0; }
+img { display: block; max-width: 100%; height: auto; border: 0; }
+a { color: inherit; text-decoration: none; }
+b, strong { font-weight: 700; }
+
+/* ---------- layout helpers ---------- */
+.dark  { background: var(--dark); }
+.light { background: var(--light); }
+
+.wrap {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* ---------- typography ---------- */
+.t-hero    { font: 500 50px/1 var(--font); color: #fff; text-align: center; }
+.t-section { font: 600 33px/1 var(--font); color: var(--dark); }
+.t-sub     { font: 600 20px/1 var(--font); color: var(--dark); }
+.t-body    { font: 400 15px/25px var(--font); color: var(--text-dark); }
+.t-list    { font: 400 15px/29px var(--font); color: var(--text-dark); padding-left: 40px; }
+.t-hand    { font: 400 26px/33px var(--hand); color: #fff; }
+
+.dark .t-section,
+.dark .t-body { color: #fff; }
+
+.t-meta    { color: var(--muted-white) !important; }
+.t-caption { color: var(--caption-white) !important; }
+
+.u { text-decoration: underline; }
+
+/* accent divider */
+.divider { padding: 15px 0; }
+.divider span {
+  display: block;
+  width: 11%;
+  border-top: 3px solid var(--accent);
+}
+
+/* button */
+.btn-wrap { padding: 15px 0; }
+.btn {
+  display: inline-block;
+  padding: 15px 30px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font: 500 15px/1 var(--font);
+  transition: opacity .3s;
+}
+.btn:hover { opacity: .9; }
+
+/* rounded images */
+.rounded { border-radius: 10px; width: 100%; }
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+.site-header { padding: 40px 20px; }
+.site-header .logo { display: block; width: 57px; margin: 0 auto; }
+.site-header .logo svg { display: block; width: 100%; height: auto; }
+
+/* ==========================================================================
+   Home: hero
+   ========================================================================== */
+.hero { min-height: 630px; padding: 80px 0 50px; }
+.hero .wrap { align-items: center; }
+.hero-intro { max-width: 581px; text-align: center; color: #fff; padding-bottom: 10px; }
+.hero-photo { width: 312px; border-radius: 10px; margin: 20px 0 30px; }
+
+.lottie { min-height: 225px; }
+.lottie .wrap { align-items: center; }
+.lottie dotlottie-player { width: 70px; height: 70px; display: block; }
+
+/* ==========================================================================
+   About / Education
+   ========================================================================== */
+.about { padding: 100px 0; }
+.about .wrap { flex-direction: row; gap: 0; }
+.about .col { flex: 1 1 50%; }
+.about .w-422 { max-width: 422px; }
+.about .w-496 { max-width: 496px; }
+.about .t-section { color: var(--dark); }
+
+/* ==========================================================================
+   Experience
+   ========================================================================== */
+.section-head { padding: 100px 0 0; }
+.cv-link { font: 500 18px/1 var(--font); color: #fff; }
+
+.exp-row .wrap {
+  flex-direction: row;
+  align-items: flex-start;
+}
+.exp-row .col { flex: 0 0 calc(50% - 10px); }
+.exp-row.pad-a { padding: 30px 0 60px; }
+.exp-row.pad-b { padding: 20px 0 60px; }
+.exp-row.pad-c { padding: 20px 0 100px; }
+
+.job-title,
+.job-meta { max-width: 487px; }
+.caption  { max-width: 487px; }
+.caption.wide { max-width: 504px; }
+
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 0 10px 30px;
+  border-left: 3px solid var(--accent);
+}
+.bullets p { max-width: 458px; }
+
+/* ==========================================================================
+   Projects / Coursework (3 columns)
+   ========================================================================== */
+.three .wrap { flex-direction: row; }
+.three .col  { flex: 0 0 calc((100% - 40px) / 3); }
+.three.pad { padding: 20px 0 100px; }
+.three .w-312 { max-width: 312px; }
+.three .w-319 { max-width: 319px; }
+
+.light .t-section,
+.light .t-sub,
+.light .t-body,
+.light .t-list { color: #000; }
+.course-list { line-height: 34px; }
+
+/* ==========================================================================
+   Free time
+   ========================================================================== */
+.free-a { padding: 30px 0 60px; }
+.free-a .wrap { flex-direction: row; }
+.free-a .col  { flex: 0 0 calc(50% - 10px); }
+.free-a .text { justify-content: center; }
+.free-a .text p { max-width: 370px; }
+
+.free-b { padding: 50px 0 60px; }
+.free-b .wrap { flex-direction: row; gap: 0; }
+.free-b .collage-col { flex: 0 0 48.86%; }
+.free-b .text {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  padding-left: 50px;
+}
+.free-b .text p { max-width: 448px; line-height: 32px; }
+
+/* collages — positions are % of the column so they scale */
+.collage { position: relative; width: 100%; }
+.collage img { border-radius: 10px; }
+.collage .main { margin: 0 auto; }
+.collage .float { position: absolute; z-index: 1; }
+
+.collage.sing { aspect-ratio: 560 / 360; }
+.collage.sing .main  { width: 65%; }
+.collage.sing .f1    { width: 47.32%; top: 35.83%; left: -13.21%; }
+.collage.sing .f2    { width: 45.36%; top: 64.17%; left: 50.89%; }
+
+.collage.hike { aspect-ratio: 557 / 300; }
+.collage.hike .main  { width: 72%; }
+.collage.hike .f1    { width: 42%; top: 49.67%; left: -8.08%; }
+.collage.hike .f2    { width: 49.19%; top: 20.67%; right: 0; }
+
+/* ==========================================================================
+   Contact
+   ========================================================================== */
+.contact { min-height: 630px; padding: 100px 0 50px; display: flex; }
+.contact .wrap { justify-content: center; align-items: center; }
+.contact .t-body { text-align: center; color: #fff; padding-bottom: 10px; }
+.contact.compact { min-height: 0; padding: 200px 0; }
+
+.social { display: flex; gap: 5px; justify-content: center; }
+.social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 10%;
+  color: rgba(255, 255, 255, .78);
+  transition: transform .3s;
+}
+.social a:hover { transform: translateY(-8px); }
+.social svg { width: 25px; height: 25px; fill: currentColor; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ==========================================================================
+   Blog list
+   ========================================================================== */
+.page-hero { padding: 160px 0; }
+.page-hero h1 { font: 600 34px/1 var(--font); color: #fff; text-align: center; }
+
+.blog-grid { padding: 100px 0; }
+.blog-grid .wrap { max-width: 1200px; }
+.cards {
+  display: flex;
+  gap: 20px;
+  padding: 10px;
+}
+.card {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 400px;
+  padding: 50px 50px 36px 36px;
+  border-radius: 16px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 20px;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, .36) 0%, #000 100%);
+}
+.card > * { position: relative; }
+.card h2 { font: 600 24px/1.4 var(--font); color: #fff; }
+.card p  { font: 400 16px/24px var(--font); color: rgba(255, 255, 255, .84); }
+.card .btn-wrap { padding: 0; }
+
+/* ==========================================================================
+   Blog post
+   ========================================================================== */
+.post-hero {
+  position: relative;
+  min-height: 415px;
+  padding: 160px 20px 0;
+  background-color: var(--dark);
+  background-size: cover;
+  background-position: center;
+}
+.post-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, .56) 0%, #000 100%);
+}
+.post-hero h1 {
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+  font: 600 34px/1.4 var(--font);
+  color: #fff;
+  text-align: center;
+}
+
+.post-body { padding: 100px 0; }
+.post-body .wrap { max-width: 1000px; padding: 10px; }
+.post-body p { font: 400 16px/24px var(--font); color: rgba(0, 0, 0, .84); }
+.post-body .ref-label { font-weight: 500; }
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 1180px) {
+  .wrap { padding-left: 20px; padding-right: 20px; }
+  .blog-grid .wrap { padding-left: 10px; padding-right: 10px; }
+}
+
+@media (max-width: 767px) {
+  .site-header .logo { width: 11%; min-width: 40px; }
+
+  .hero { min-height: 60vh; padding: 50px 0 40px; }
+  .t-hero { font-size: 36px; line-height: 1.2; }
+  .hero-intro { max-width: 294px; font-size: 12px; }
+  .hero-photo { width: 90%; max-width: 312px; }
+  .lottie { min-height: 20vh; }
+
+  .t-section { font-size: 30px; line-height: 1.2; }
+  .t-body, .t-list { font-size: 14px; }
+  .divider { padding: 2px 0; }
+  .cv-link { font-size: 16px; line-height: 1.2; }
+
+  .about { padding: 70px 0; }
+  .about .wrap,
+  .exp-row .wrap,
+  .three .wrap,
+  .free-a .wrap,
+  .free-b .wrap,
+  .cards { flex-direction: column; }
+  .about .wrap { gap: 50px; }
+  .about .w-422, .about .w-496,
+  .job-title, .job-meta, .caption, .caption.wide,
+  .three .w-312, .three .w-319 { max-width: 294px; }
+
+  .section-head { padding: 70px 0 0; }
+  .exp-row.pad-a, .exp-row.pad-b { padding: 20px 0 30px; }
+  .exp-row.pad-c { padding: 20px 0 70px; }
+  .three.pad { padding: 20px 0 70px; }
+
+  .collage.sing .f1 { left: 0; }
+  .collage.hike .f1 { left: 0; }
+  .free-a .col, .free-b .collage-col { flex-basis: auto; }
+  /* floating photos hang below the collage box; reserve room for them */
+  .free-a .collage-col { margin-bottom: 30%; }
+  .free-b .collage-col { margin-bottom: 36%; }
+  .free-a .text { order: -1; }
+  .free-b .text { padding-left: 0; }
+  .t-hand { font-size: 22px; line-height: 1.3; }
+  .free-b .text p { line-height: 1.3; }
+
+  .contact { min-height: 0; padding: 70px 0; }
+  .t-hero.contact-title { font-size: 36px; }
+  .contact.compact { padding: 100px 0; }
+
+  .page-hero { padding: 100px 0; }
+  .blog-grid { padding: 60px 0; }
+  .card { padding: 36px 30px 30px; min-height: 360px; }
+
+  .post-hero { min-height: 300px; padding-top: 110px; }
+  .post-hero h1 { font-size: 26px; }
+  .post-body { padding: 60px 0; }
+  .post-body p { font-size: 15px; }
+}
