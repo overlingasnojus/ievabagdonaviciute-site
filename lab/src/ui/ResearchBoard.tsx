@@ -179,7 +179,7 @@ function Print({
   onView: (img: ResearchImage) => void;
   tone?: 'pink' | 'burgundy' | 'cream';
   tilt?: number;
-  variant?: 'portrait' | 'wide';
+  variant?: 'portrait' | 'thumb';
 }) {
   return (
     <figure className="rb-print" data-variant={variant} style={{ '--tilt': `${tilt}deg` } as React.CSSProperties}>
@@ -189,7 +189,6 @@ function Print({
         </div>
         <Magnet tone={tone} />
       </div>
-      {img.caption && <figcaption className="rb-caption">{img.caption}</figcaption>}
     </figure>
   );
 }
@@ -295,19 +294,18 @@ function Detail({
       </article>
     );
   } else if (entry.layout === 'feature') {
-    // a portrait print beside the words, the second print across the full width below
+    // a portrait print beside the words, with a small print of the plot under them;
+    // captions appear only in the enlarged viewer
     content = (
-      <div className="rb-feature">
-        <div className="rb-feature-top">
-          <Print img={entry.image} onView={onView} variant="portrait" tilt={-1.2} />
-          <article className="rb-text" aria-labelledby="rb-entry-title">
-            {heading}
-            <Body paragraphs={entry.body} />
-            <Topics topics={entry.topics} />
-            <Links links={entry.links} />
-          </article>
-        </div>
-        {entry.image2 && <Print img={entry.image2} onView={onView} variant="wide" tone="pink" tilt={0.4} />}
+      <div className="rb-feature-top">
+        <Print img={entry.image} onView={onView} variant="portrait" tilt={-1.2} />
+        <article className="rb-text" aria-labelledby="rb-entry-title">
+          {heading}
+          <Body paragraphs={entry.body} />
+          <Topics topics={entry.topics} />
+          {entry.image2 && <Print img={entry.image2} onView={onView} variant="thumb" tone="pink" tilt={0.6} />}
+          <Links links={entry.links} />
+        </article>
       </div>
     );
   } else {
@@ -397,7 +395,6 @@ function ListPrint({ img, onView }: { img: ResearchImage; onView: (img: Research
       <div className="paper paper-print rb-list-figure">
         <Figure img={img} onView={onView} />
       </div>
-      {img.caption && <figcaption className="rb-caption">{img.caption}</figcaption>}
     </figure>
   );
 }

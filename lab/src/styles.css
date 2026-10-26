@@ -1529,36 +1529,14 @@ button {
   max-height: 44cqh;
 }
 
-/* a plot across the full width of the entry, its caption the same width beneath */
-.rb-print[data-variant='wide'] {
-  align-items: stretch;
-  margin-top: 3.6cqh;
+/* a small supporting print under an entry's words (EPFL's plot) */
+.rb-print[data-variant='thumb'] {
+  margin: 0.4cqh 0 1.6cqh;
 }
 
-.rb-print[data-variant='wide'] .rb-print-pin,
-.rb-print[data-variant='wide'] .rb-print-pin > .paper {
-  display: block;
-}
-
-.rb-print[data-variant='wide'] .rb-img {
-  width: 100%;
-  max-width: none;
-  max-height: none;
-}
-
-.rb-caption {
-  margin: 0.9em 0 0;
-  font-size: clamp(11.5px, 1.05cqw, 14px);
-  line-height: 1.45;
-  color: #5e1a3a;
-}
-
-.rb-print:not([data-variant='wide']) .rb-caption {
-  max-width: 26cqw;
-  font-family: 'Caveat', var(--round);
-  font-weight: 700;
-  font-size: clamp(15px, 1.55cqw, 21px);
-  color: var(--raspberry);
+.rb-print[data-variant='thumb'] .rb-img {
+  max-width: 24cqw;
+  max-height: 24cqh;
 }
 
 .rb-zoom {
@@ -1925,7 +1903,8 @@ button {
   width: auto;
   height: auto;
   max-width: calc(92vw - 20px);
-  max-height: calc(84vh - 70px);
+  /* leaves room for a caption of up to a few lines and the Close control */
+  max-height: calc(100vh - 190px);
 }
 
 .rb-viewer figcaption {
