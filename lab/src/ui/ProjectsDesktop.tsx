@@ -77,6 +77,17 @@ function ProjectWindow({ project, closing, onClose }: { project: Project; closin
             </p>
           ))}
           {project.awards && <Badges awards={project.awards} />}
+          {project.links && (
+            <ul className="dt-links">
+              {project.links.map((l) => (
+                <li key={l.href}>
+                  <a href={l.href} target="_blank" rel="noopener noreferrer">
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
           {project.sections && (
             // the club's projects, readable right here: no nested files to open
             <ul className="dt-sections">

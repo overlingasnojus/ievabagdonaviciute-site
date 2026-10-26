@@ -2270,6 +2270,27 @@ button {
   height: auto;
 }
 
+/* outbound links (e.g. the repo) under a project's text */
+.dt-links {
+  list-style: none;
+  margin: 1em 0 0;
+  padding: 0;
+}
+
+.dt-links a {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: clamp(10.5px, 1.1cqw, 13.5px);
+  color: var(--raspberry);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.dt-links a:hover {
+  color: var(--burgundy);
+}
+
 /* a project's own short sections (e.g. the club's apps), right in its window */
 .dt-sections {
   list-style: none;

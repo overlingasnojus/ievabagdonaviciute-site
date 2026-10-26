@@ -309,6 +309,7 @@ export interface Project {
   body: string[];
   awards?: string[];
   sections?: ProjectSection[];
+  links?: ResearchLink[];
 }
 
 export const PROJECTS: Project[] = [
@@ -320,6 +321,7 @@ export const PROJECTS: Project[] = [
     meta: 'Stanford Flower.ai Hackathon · 2026',
     body: ['A privacy-preserving agentic AI system built with my team at Stanford’s Flower.ai Hackathon, where we won **1st place**.'],
     awards: ['1st Place'],
+    links: [{ label: 'View on GitHub ↗', href: 'https://github.com/uzmahamid01/aius-flower-hackathon' }],
   },
   {
     id: 'flower-power',
