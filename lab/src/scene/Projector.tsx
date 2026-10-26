@@ -13,8 +13,10 @@ import { dom, surfaces } from './registry';
 
 /** Below these projected sizes an in-world surface becomes a screen-sized panel. */
 const MIN_ANCHORED: Record<SectionId, [number, number]> = {
-  about: [420, 230],
-  research: [380, 220],
+  // Only a genuinely phone-sized spread becomes one scrolling page; anything larger
+  // keeps the two-page spread and fits its content (see AboutNotebook).
+  about: [520, 330],
+  research: [620, 340], // below this the board becomes a simple expandable list
   projects: [380, 220],
   beyond: [420, 220],
   cv: [0, 0], // unused: the CV always uses the viewer layout
@@ -92,7 +94,7 @@ export function Projector() {
       el.style.width = `${r.width}px`;
       el.style.height = `${r.height}px`;
       el.style.opacity = anim.ui.content.toFixed(3);
-    } else if (id && el && target && anim.ui.content > 0.0005) {
+    } else if (id && el && target && (anim.ui.content > 0.0005 || (id === 'research' && anim.research.sketch > 0.0005))) {
       const [w, h] = target.size;
       const o = target.object;
       corners[0].set(-w / 2, h / 2, 0); // top-left
@@ -110,7 +112,8 @@ export function Projector() {
         maxY = Math.max(maxY, y);
       });
       const [minW, minH] = MIN_ANCHORED[id];
-      const mode = maxX - minX < minW || maxY - minY < minH ? 'panel' : 'anchored';
+      // A section can also ask for the panel when its content can't fit (data-force).
+      const mode = maxX - minX < minW || maxY - minY < minH || el.dataset.force === 'panel' ? 'panel' : 'anchored';
       if (el.dataset.mode !== mode) {
         el.dataset.mode = mode;
         el.dispatchEvent(new CustomEvent('surfacemode', { detail: mode }));
@@ -133,8 +136,11 @@ export function Projector() {
         el.style.left = el.style.top = el.style.width = el.style.height = el.style.transform = '';
         lastSize.current = [0, 0];
       }
-      // The notebook brings its blocks in one by one (see --reveal in the CSS).
-      el.style.opacity = (id === 'about' ? Math.min(1, anim.ui.content * 4) : anim.ui.content).toFixed(3);
+      // The notebook brings its blocks in one by one (see --reveal in the CSS). The
+      // research board stays opaque: it wipes in (--wipe) and its notes fade (--reveal).
+      const opacity = id === 'about' ? Math.min(1, anim.ui.content * 4) : id === 'research' ? 1 : anim.ui.content;
+      el.style.opacity = opacity.toFixed(3);
+      el.style.setProperty('--wipe', anim.research.sketch.toFixed(3));
       el.style.setProperty('--reveal', anim.ui.content.toFixed(3));
       el.style.setProperty('--boot', anim.projects.boot.toFixed(3));
     } else if (el) {

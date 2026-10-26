@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { PLACEHOLDERS, SECTION_BY_ID, type SectionId } from '../content';
 import { dom } from '../scene/registry';
 import { AboutNotebook } from './AboutNotebook';
+import { ResearchBoard } from './ResearchBoard';
 import { requestSection, useNav } from '../state/nav';
 
 // HTML surfaces for each section. While a section is open the Projector pins the
@@ -14,19 +15,6 @@ function Kicker({ id }: { id: SectionId }) {
     <p className="kicker">
       {s.number} · {s.label}
     </p>
-  );
-}
-
-function Research() {
-  const c = PLACEHOLDERS.research;
-  return (
-    <div className="board">
-      <Kicker id="research" />
-      <h2 id="section-title" tabIndex={-1}>
-        {c.title}
-      </h2>
-      <p className="note">{c.note}</p>
-    </div>
   );
 }
 
@@ -123,7 +111,7 @@ function Cv() {
   );
 }
 
-const CONTENT: Record<SectionId, () => JSX.Element> = { about: AboutNotebook, research: Research, projects: Projects, beyond: Beyond, cv: Cv };
+const CONTENT: Record<SectionId, () => JSX.Element> = { about: AboutNotebook, research: ResearchBoard, projects: Projects, beyond: Beyond, cv: Cv };
 
 export function SectionLayer() {
   const { phase, section } = useNav();

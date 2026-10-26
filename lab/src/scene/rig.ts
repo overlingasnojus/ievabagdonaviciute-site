@@ -84,11 +84,15 @@ function distanceToFit(surface: [number, number], fill: number, aspect: number, 
 export function sectionShot(id: SectionId, vp: Viewport): Shot {
   if (id === 'cv') return overviewShot(vp);
   const spec = SHOTS[id];
-  const d = distanceToFit(spec.surface, spec.fill, vp.width / vp.height, spec.fillW);
+  // Frame within the area under the header: centre there, and never fill more of the
+  // height than that area (less a small margin) leaves.
+  const header = vp.width <= 820 ? 56 : 64;
+  const fill = Math.min(spec.fill, (vp.height - header - 22) / vp.height);
+  const d = distanceToFit(spec.surface, fill, vp.width / vp.height, spec.fillW);
   return {
     pos: spec.target.clone().addScaledVector(spec.dir, d),
     target: spec.target.clone(),
-    offset: new THREE.Vector2(0, 0),
+    offset: new THREE.Vector2(0, -header / (2 * vp.height)),
   };
 }
 

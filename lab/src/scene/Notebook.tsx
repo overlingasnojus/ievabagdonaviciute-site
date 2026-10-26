@@ -46,10 +46,10 @@ export function Notebook() {
     b.root.quaternion.copy(NOTEBOOK.restQuat).slerp(readQuat, a.float);
 
     setBookOpen(b, a.cover);
-    // the top page lifts with the cover, settles, and is the page that turns
+    // the top page lifts with the cover, then settles
     const lift = Math.sin(a.cover * Math.PI) * 0.32;
     const wiggle = Math.sin(a.settle * Math.PI * 2.5) * (1 - a.settle) * 0.07;
-    b.leaf.rotation.y = -(lift * (1 - a.settle) + wiggle) - Math.PI * a.turn;
+    b.leaf.rotation.y = -(lift * (1 - a.settle) + wiggle);
   });
 
   return (

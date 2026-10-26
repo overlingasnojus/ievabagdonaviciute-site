@@ -14,7 +14,7 @@ export interface BookHandles {
   root: THREE.Group;
   front: THREE.Group;
   spine: THREE.Group;
-  /** Top page of the back half; rotating it −π turns the page. */
+  /** Top page of the back half; it lifts a little as the book opens. */
   leaf: THREE.Group;
   surface: THREE.Object3D;
 }
@@ -65,16 +65,16 @@ export const Book = forwardRef<BookHandles, BookProps>(function Book(
     // face order: +x −x +y −y +z −z
     return {
       back: mats([coverColor, coverColor, coverColor, coverColor, inside, coverColor]),
-      backPages: mats([edges, edges, edges, edges, pageMap, pageMap], 0.95, 0.28),
-      frontPages: mats([edges, edges, edges, edges, pageMap, pageMap], 0.95, 0.28),
+      backPages: mats([edges, edges, edges, edges, pageMap, pageMap], 0.95, 0.42),
+      frontPages: mats([edges, edges, edges, edges, pageMap, pageMap], 0.95, 0.42),
       front: mats([coverColor, coverColor, coverColor, coverColor, coverMap, inside]),
       spine: mats([inside, spineMap, coverColor, coverColor, coverColor, coverColor]),
-      leaf: mats([edges, edges, edges, edges, pageMap, pageMap], 0.95, 0.28),
+      leaf: mats([edges, edges, edges, edges, pageMap, pageMap], 0.95, 0.42),
     };
   }, [coverColor, coverMap, spineMap, pageMap, inside]);
 
-  const pw = w - 0.012;
-  const stitchYs = useMemo(() => Array.from({ length: 7 }, (_, i) => (i / 6 - 0.5) * (h - 0.12)), [h]);
+  const pw = w - 0.005;
+  const stitchYs = useMemo(() => Array.from({ length: 8 }, (_, i) => (i / 7 - 0.5) * (h - 0.1)), [h]);
 
   return (
     <group ref={root}>
@@ -82,7 +82,7 @@ export const Book = forwardRef<BookHandles, BookProps>(function Book(
       <mesh position={[cw / 2, 0, -half - C / 2]} material={m.back} castShadow receiveShadow>
         <boxGeometry args={[cw, ch, C]} />
       </mesh>
-      <mesh position={[0.012 + pw / 2, 0, -half / 2]} material={m.backPages} castShadow receiveShadow>
+      <mesh position={[0.005 + pw / 2, 0, -half / 2]} material={m.backPages} castShadow receiveShadow>
         <boxGeometry args={[pw, h, half]} />
       </mesh>
       {tab && (
@@ -94,7 +94,7 @@ export const Book = forwardRef<BookHandles, BookProps>(function Book(
         </mesh>
       )}
       <group ref={leaf}>
-        <mesh position={[0.014 + (pw - 0.004) / 2, 0, 0.0015]} material={m.leaf}>
+        <mesh position={[0.007 + (pw - 0.004) / 2, 0, 0.0015]} material={m.leaf}>
           <boxGeometry args={[pw - 0.004, h - 0.004, 0.003]} />
         </mesh>
       </group>
@@ -111,16 +111,16 @@ export const Book = forwardRef<BookHandles, BookProps>(function Book(
         </mesh>
         {stitches &&
           stitchYs.map((y) => (
-            <mesh key={y} position={[0.003, y, 0]}>
-              <boxGeometry args={[0.008, 0.035, 0.016]} />
-              <meshStandardMaterial color="#B5835A" roughness={0.5} metalness={0.4} />
+            <mesh key={y} position={[0.004, y, 0]}>
+              <boxGeometry args={[0.01, 0.042, 0.022]} />
+              <meshStandardMaterial color="#B98A5E" roughness={0.42} metalness={0.55} />
             </mesh>
           ))}
       </group>
 
       {/* front half: cover and the front half of the pages, hinged at the centre plane */}
       <group ref={front}>
-        <mesh position={[0.012 + pw / 2, 0, half / 2]} material={m.frontPages} castShadow receiveShadow>
+        <mesh position={[0.005 + pw / 2, 0, half / 2]} material={m.frontPages} castShadow receiveShadow>
           <boxGeometry args={[pw, h, half]} />
         </mesh>
         <mesh position={[cw / 2, 0, half + C / 2]} material={m.front} castShadow receiveShadow>

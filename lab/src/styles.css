@@ -85,6 +85,23 @@ button {
   pointer-events: auto;
 }
 
+/* inside a section the header sits over the room, so give it a soft backdrop */
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255, 249, 242, 0.86);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 0 rgba(82, 11, 45, 0.08);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.app:not([data-phase='overview']) .header::before {
+  opacity: 1;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -487,6 +504,8 @@ button {
 }
 
 /* --- About notebook ----------------------------------------------------- */
+/* One open spread. cqh/cqw are the spread's own height/width, so the layout scales
+   with the 3D notebook; --photo and --nb-scale come from the fit step in AboutNotebook. */
 
 .nb {
   position: relative;
@@ -501,172 +520,813 @@ button {
   height: 100%;
 }
 
-.nb[data-layout='single'] .nb-pages {
-  grid-template-columns: 1fr;
-}
-
 .nb-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   /* generous margins, wider beside the binding */
-  padding: 8cqh 7.5cqw 11cqh 4.5cqw;
-  overflow: hidden;
-  transition: opacity 0.2s ease;
+  padding: 7.5cqh 6.5cqw 6cqh 5cqw;
+  overflow: auto;
+  scrollbar-width: none;
 }
 
 .nb-right {
-  padding: 8cqh 4.5cqw 11cqh 7.5cqw;
-}
-
-.nb[data-turning] .nb-page {
-  opacity: 0;
+  padding: 10cqh 5cqw 5cqh 6.5cqw;
 }
 
 /* blocks fade onto the page one after another as --reveal goes 0 → 1 */
 .nb-page > * {
-  opacity: clamp(0, calc(var(--reveal, 1) * 2.6 - var(--r, 0) * 0.22), 1);
-  transform: translateY(calc((1 - clamp(0, calc(var(--reveal, 1) * 2.6 - var(--r, 0) * 0.22), 1)) * 5px));
+  opacity: clamp(0, calc(var(--reveal, 1) * 2.4 - var(--r, 0) * 0.2), 1);
+  transform: translateY(calc((1 - clamp(0, calc(var(--reveal, 1) * 2.4 - var(--r, 0) * 0.2), 1)) * 5px));
 }
 
-.nb .kicker {
-  margin: 0 0 0.5em;
-  font-family: var(--mono);
-  font-size: clamp(10px, 1.6cqh, 13px);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--raspberry);
+.nb-heading {
+  position: relative;
+  margin-bottom: 1.4cqh;
 }
 
 .nb-title {
   font-family: var(--serif) !important;
   font-weight: 700 !important;
-  font-size: clamp(30px, calc(6.4cqh * var(--nb-scale, 1)), 64px);
-  letter-spacing: -0.015em !important;
-  line-height: 1.02;
-  margin: 0 0 0.45em !important;
+  font-size: clamp(24px, calc(7.4cqh * var(--nb-scale, 1)), 68px);
+  letter-spacing: -0.012em !important;
+  line-height: 1 !important;
+  margin: 0 !important;
 }
 
-.nb-p {
-  margin: 0 0 0.85em;
-  font-weight: 600;
-  font-size: clamp(14px, calc(2.35cqh * var(--nb-scale, 1)), 21px);
-  line-height: 1.58;
-  color: #4a0d2a;
+.nb-underline {
+  display: block;
+  width: 56%;
+  height: 1.7cqh;
+  margin-top: 0.8cqh;
 }
 
-.nb-invite {
-  color: var(--raspberry);
-  font-weight: 700;
+.nb-doodle {
+  position: absolute;
+  width: clamp(18px, 4.2cqh, 38px);
+  height: auto;
+  pointer-events: none;
+}
+
+.nb-doodle-title { right: 4%; top: -6%; }
+.nb-doodle-heart { left: 0; top: 40%; }
+.nb-doodle-side { left: 1%; top: 60%; transform: scaleX(-1); }
+.nb-doodle-corner { right: 7cqw; top: 3.5cqh; }
+
+.nb-photo-row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 1.6cqh 0 3cqh;
 }
 
 .polaroid {
   position: relative;
-  float: right;
-  width: 38%;
-  margin: 0.2em 0 0.8em 1.1em;
-  padding: 5% 5% 15%;
+  width: calc(var(--photo, 0.8) * 100%);
+  margin: 0;
+  /* a slim frame so most of the Polaroid is the photo */
+  padding: 3.4% 3.4% 7%;
   background: #fffdf9;
-  box-shadow: 0 1px 1px rgba(82, 11, 45, 0.12), 0 8px 18px rgba(82, 11, 45, 0.16);
-  transform: rotate(2.2deg) translateY(calc((1 - clamp(0, calc(var(--reveal, 1) * 2.6 - var(--r, 0) * 0.22), 1)) * 5px));
+  box-shadow: 0 1px 1px rgba(82, 11, 45, 0.12), 0 10px 22px rgba(82, 11, 45, 0.18);
+  transform: rotate(-1.4deg);
 }
 
 .polaroid img {
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 1.08;
+  aspect-ratio: 1.06 / 1;
   object-fit: cover;
   background: var(--blush);
 }
 
 .polaroid .tape {
   position: absolute;
-  top: -9%;
+  top: -5%;
   left: 50%;
-  width: 46%;
-  height: 13%;
-  transform: translateX(-50%) rotate(-4deg);
-  background: rgba(239, 170, 190, 0.72);
+  width: 34%;
+  height: 9%;
+  transform: translateX(-50%) rotate(-3deg);
+  background: rgba(239, 170, 190, 0.75);
   box-shadow: 0 1px 2px rgba(82, 11, 45, 0.1);
 }
 
-.nb-doodle-wrap {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.6em;
+.nb-p {
+  margin: 0 0 1.3em;
+  font-weight: 500;
+  /* proportional to the page; the floor only stops it becoming unreadable */
+  font-size: clamp(11px, calc(2.2cqh * var(--nb-scale, 1)), 20px);
+  line-height: 1.68;
+  color: #4a0d2a;
 }
 
-.nb-doodle {
-  width: clamp(40px, 9cqh, 72px);
-  height: auto;
-  opacity: 0.85;
+.nb-left .nb-p:last-child {
+  margin-bottom: 0;
 }
 
-.nb-nav {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 3.4cqh;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 14px;
-  padding: 0 4.5cqw;
-  font-family: var(--mono);
-  font-size: 13px;
-}
-
-.nb-nav button {
-  border: 1px solid rgba(82, 11, 45, 0.22);
-  background: rgba(255, 251, 246, 0.9);
-  border-radius: 999px;
-  padding: 6px 14px;
-  min-height: 36px;
-  cursor: pointer;
+.nb-p strong {
+  font-weight: 800;
   color: var(--burgundy);
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 14px;
 }
 
-.nb-nav button:hover:not(:disabled) {
-  border-color: var(--raspberry);
-  color: var(--raspberry);
+.nb-robot-wrap {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.nb-nav button:disabled {
-  opacity: 0.35;
-  cursor: default;
+.nb-robot {
+  width: clamp(56px, 13cqh, 120px);
+  height: auto;
 }
 
-.nb-count {
-  color: var(--muted);
-}
+/* Fit levels (chosen in AboutNotebook): the robot sketch can go, then spacing tightens. */
+.nb[data-robot='off'] .nb-robot-wrap { display: none; }
+.nb[data-spacing] .nb-p { line-height: 1.56; margin-bottom: 1em; }
+.nb[data-spacing] .nb-right { padding-top: 7cqh; padding-bottom: 4cqh; }
+.nb[data-spacing='2'] .nb-page { padding-top: 5.5cqh; padding-bottom: 3.5cqh; }
+.nb[data-spacing='2'] .nb-right { padding-top: 6cqh; }
+.nb[data-spacing='2'] .nb-photo-row { margin: 1cqh 0 2cqh; }
 
-/* phone panel: one notebook page at a time */
+/* phones: the same content as one continuous, scrollable page */
 .surface[data-mode='panel'][data-section='about'] {
-  height: min(82svh, 720px);
+  height: min(82svh, 760px);
   background:
-    linear-gradient(90deg, rgba(185, 103, 126, 0.18) 0 10px, transparent 10px),
+    linear-gradient(90deg, rgba(156, 63, 98, 0.22) 0 10px, transparent 10px),
     #faf2e4;
   border: 1px solid #ead9c4;
 }
 
-.surface[data-mode='panel'] .nb-page {
-  padding: 26px 22px 70px 30px;
-  overflow: auto;
-}
-
-.surface[data-mode='panel'] .nb-title { font-size: 34px; }
-.surface[data-mode='panel'] .nb-p { font-size: 16px; }
-.surface[data-mode='panel'] .nb-nav { bottom: 14px; justify-content: center; padding: 0 16px; }
-
-/* Whiteboard */
-.board {
+.nb[data-layout='scroll'] .nb-pages {
+  display: block;
   height: 100%;
-  padding: 8cqh 6cqw;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
-.board h2 { font-size: clamp(24px, 5.2cqw, 64px); }
-.board .kicker { font-size: clamp(11px, 1.3cqw, 16px); }
-.board .note { margin-top: 0.8em; font-size: clamp(15px, 2.1cqw, 24px); }
+.nb[data-layout='scroll'] .nb-page {
+  overflow: visible;
+  padding: 28px 22px 4px 30px;
+}
+
+.nb[data-layout='scroll'] .nb-right {
+  padding: 1.3em 22px 22px 30px;
+}
+
+.nb[data-layout='scroll'] .nb-title { font-size: 38px; }
+.nb[data-layout='scroll'] .nb-underline { height: 10px; margin-top: 6px; }
+.nb[data-layout='scroll'] .nb-p { font-size: 16px; }
+.nb[data-layout='scroll'] .nb-doodle { width: 24px; }
+.nb[data-layout='scroll'] .nb-doodle-corner { display: none; }
+.nb[data-layout='scroll'] .nb-photo-row { margin: 14px 0 20px; }
+.nb[data-layout='scroll'] .polaroid { width: 84%; }
+.nb[data-layout='scroll'] .nb-robot { width: 70px; }
+
+/* --- Research whiteboard -------------------------------------------------- */
+/* cqw/cqh are the board's own size. The board is opaque: it wipes in over the 3D
+   whiteboard (--wipe) while the doodles there are wiped away, then its notes fade in. */
+
+.surface[data-section='research'] {
+  overflow: hidden;
+}
+
+.rb {
+  position: relative;
+  height: 100%;
+  font-family: var(--sans);
+  color: var(--burgundy);
+}
+
+.rb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 30% 20%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, #fcfaf6, #f7f2ec);
+  clip-path: inset(0 calc((1 - var(--wipe, 1)) * 100%) 0 0);
+}
+
+.rb-content {
+  position: relative;
+  height: 100%;
+  opacity: clamp(0, calc(var(--reveal, 1) * 1.6), 1);
+}
+
+.rb-title {
+  margin: 0;
+  font-family: 'Caveat', var(--round);
+  font-weight: 700;
+  font-size: clamp(28px, 4cqw, 58px);
+  line-height: 1;
+  color: var(--burgundy);
+  outline: none;
+}
+
+.rb-hint {
+  margin: 0;
+  font-family: 'Caveat', var(--round);
+  font-weight: 600;
+  font-size: clamp(16px, 1.7cqw, 24px);
+  color: var(--raspberry);
+}
+
+.rb-org {
+  margin: 0 0 0.45em;
+  font-family: var(--mono);
+  font-size: clamp(9.5px, 0.92cqw, 12.5px);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--raspberry);
+}
+
+.rb-preview {
+  margin: 0;
+  font-size: clamp(11.5px, 1.08cqw, 15px);
+  line-height: 1.45;
+  color: #5e1a3a;
+}
+
+/* magnets and the papers they hold */
+.pin {
+  position: relative;
+  min-height: 0;
+}
+
+.magnet {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 50%;
+  width: clamp(13px, 1.6cqw, 24px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -45%);
+  background: radial-gradient(circle at 35% 30%, #fff 0 9%, var(--m1) 32%, var(--m2) 100%);
+  box-shadow: 0 2px 3px rgba(40, 10, 25, 0.3), 0 4px 8px rgba(40, 10, 25, 0.12);
+  pointer-events: none;
+}
+
+.magnet[data-tone='pink'] { --m1: #e9a6bb; --m2: #b65a79; }
+.magnet[data-tone='burgundy'] { --m1: #9a3a62; --m2: #4a0b26; }
+.magnet[data-tone='cream'] { --m1: #fbf1e1; --m2: #cdb592; }
+
+.paper {
+  position: relative;
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(60, 20, 35, 0.14), 0 6px 14px rgba(60, 20, 35, 0.1);
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* the paper lifts on hover; the magnet stays put */
+.pin:hover > .paper,
+.pin:focus-within > .paper {
+  transform: rotate(var(--tilt, 0deg)) translateY(-4px);
+  box-shadow: 0 2px 3px rgba(60, 20, 35, 0.14), 0 14px 26px rgba(60, 20, 35, 0.18);
+}
+
+.stretch {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* the whole paper is the click target */
+.stretch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.stretch:focus-visible {
+  outline: none;
+}
+
+.pin:has(.stretch:focus-visible) > .paper {
+  outline: 3px solid var(--raspberry);
+  outline-offset: 3px;
+}
+
+.rb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rb-img[data-kind='plot'] {
+  object-fit: contain;
+  background: #fff;
+}
+
+.rb-sketch {
+  width: 82%;
+  height: 88%;
+}
+
+/* overview */
+.rb-overview {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 3.4cqh;
+  padding: 3.6cqh 3.4cqw 4.2cqh;
+}
+
+.rb-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.6cqw;
+}
+
+.rb-featured,
+.rb-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3.2cqw;
+  min-height: 0;
+}
+
+.paper-print {
+  display: flex;
+  flex-direction: column;
+  padding: 1cqw 1cqw 1.8cqh;
+}
+
+.rb-visual {
+  flex: 1 1 auto;
+  min-height: 3em;
+  margin-bottom: 1.6cqh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f7f2ee;
+}
+
+.rb-card-title {
+  margin: 0 0 0.4em;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(14px, 1.5cqw, 21px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.rb-more {
+  margin-top: 0.6em;
+  font-family: 'Caveat', var(--round);
+  font-weight: 700;
+  font-size: clamp(15px, 1.45cqw, 21px);
+  color: var(--raspberry);
+}
+
+.paper-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 1.1cqw;
+  padding: 1.1cqw 1.2cqw 1.3cqw;
+  background: #fffcf3;
+}
+
+.rb-thumb {
+  width: clamp(46px, 6.6cqw, 92px);
+  aspect-ratio: 1;
+  padding: 3px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(60, 20, 35, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.rb-thumb .rb-sketch { width: 100%; height: 100%; }
+
+.rb-note-title {
+  margin: 0 0 0.3em;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(12.5px, 1.18cqw, 16px);
+  line-height: 1.2;
+}
+
+.paper-note .rb-preview {
+  font-size: clamp(11px, 0.98cqw, 13.5px);
+}
+
+/* detail: the chosen entry expands inside the board, the rest move to a strip */
+.rb-detail {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21%;
+  gap: 2.4cqw;
+  padding: 2.8cqh 2.6cqw 3.4cqh 3.4cqw;
+}
+
+.rb-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: rb-in 0.28s ease both;
+}
+
+@keyframes rb-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+.rb-back {
+  align-self: flex-start;
+  margin: 0 0 1.4cqh -0.4em;
+  padding: 0.1em 0.4em;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  font-family: 'Caveat', var(--round);
+  font-weight: 700;
+  font-size: clamp(17px, 1.7cqw, 25px);
+  color: var(--burgundy);
+}
+
+.rb-back:hover { color: var(--raspberry); }
+
+.rb-main-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 54% minmax(0, 1fr);
+  gap: 3cqw;
+}
+
+/* on a large board, plots get more room so their axes and labels stay legible */
+@container (min-width: 1150px) {
+  .rb-main-grid:has([data-plot]) {
+    grid-template-columns: 62% minmax(0, 1fr);
+  }
+}
+
+.pin-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4cqh;
+  min-height: 0;
+}
+
+.pin-figure > .paper {
+  height: auto;
+  padding: 1cqw;
+}
+
+.rb-figure-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.rb-figure-btn .rb-img {
+  height: auto;
+  max-height: 64cqh;
+  object-fit: contain;
+}
+
+.rb-zoom {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 253, 248, 0.92);
+  color: var(--burgundy);
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(60, 20, 35, 0.25);
+}
+
+.rb-figure-sketch {
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f2ee;
+}
+
+.rb-second {
+  width: 52%;
+  align-self: flex-end;
+  padding: 0.8cqw;
+  transform: rotate(1.6deg);
+}
+
+.rb-text {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 0.8cqw 0.4cqh 0;
+  scrollbar-width: thin;
+}
+
+.rb-role {
+  margin: -0.1em 0 0.4em;
+  font-size: clamp(11px, 1cqw, 13.5px);
+  color: var(--muted);
+}
+
+.rb-entry-title {
+  margin: 0.1em 0 0.6em;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(20px, 2.3cqw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  outline: none;
+}
+
+.rb-body {
+  margin: 0 0 0.85em;
+  font-size: clamp(13px, 1.2cqw, 16.5px);
+  line-height: 1.6;
+  color: #4a0d2a;
+}
+
+.rb-body strong {
+  font-weight: 700;
+  color: var(--burgundy);
+}
+
+.rb-topics {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45em;
+  margin: 0.3em 0 1em;
+  padding: 0;
+}
+
+.rb-topics li {
+  padding: 0.22em 0.65em;
+  border: 1px dashed rgba(190, 62, 112, 0.5);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.88cqw, 12px);
+  color: var(--raspberry);
+}
+
+/* links read like small annotated references on the board */
+.rb-links {
+  list-style: none;
+  display: grid;
+  gap: 0.6em;
+  margin: 0;
+  padding: 0;
+}
+
+.rb-links li {
+  font-size: clamp(12px, 1.05cqw, 14.5px);
+  line-height: 1.5;
+}
+
+.rb-links li::before {
+  content: '↳ ';
+  font-family: 'Caveat', var(--round);
+  font-weight: 700;
+  color: var(--raspberry);
+}
+
+.rb-tag {
+  margin-right: 0.5em;
+  padding: 0.1em 0.45em;
+  border-radius: 4px;
+  background: var(--blush);
+  font-family: var(--mono);
+  font-size: 0.78em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+}
+
+.rb-link-title {
+  margin-right: 0.5em;
+  font-style: italic;
+  color: #5e1a3a;
+}
+
+.rb-links a {
+  font-weight: 600;
+  color: var(--raspberry);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  border-radius: 3px;
+}
+
+.rb-links a:hover {
+  color: var(--burgundy);
+  background: var(--blush);
+  text-decoration-thickness: 2px;
+}
+
+.rb-strip {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-left: 1.6cqw;
+  border-left: 1.5px dashed rgba(82, 11, 45, 0.15);
+}
+
+.rb-strip-label {
+  margin: 0 0 1.4cqh;
+  font-family: 'Caveat', var(--round);
+  font-weight: 700;
+  font-size: clamp(15px, 1.5cqw, 21px);
+  color: var(--raspberry);
+}
+
+.rb-strip ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2cqh;
+  min-height: 0;
+  margin: 0;
+  padding: 6px 2px 2px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.pin-strip .magnet {
+  width: clamp(10px, 1.1cqw, 16px);
+}
+
+.paper-strip {
+  display: block;
+  width: 100%;
+  padding: 0.8cqw 0.9cqw;
+  border: 0;
+  background: #fffcf3;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.paper-strip .rb-org {
+  display: block;
+  font-size: clamp(8.5px, 0.78cqw, 10.5px);
+}
+
+.rb-strip-title {
+  display: block;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(11.5px, 1.04cqw, 14.5px);
+  line-height: 1.22;
+}
+
+/* narrow screens: a simple list of expandable entries */
+.surface[data-mode='panel'][data-section='research'] {
+  height: min(82svh, 760px);
+  background: #fbf8f3;
+}
+
+.rb[data-view='list'] .rb-content {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rb-list {
+  padding: 22px 18px 26px;
+}
+
+.rb-list > ul {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.rb-list-item {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(60, 20, 35, 0.14), 0 6px 14px rgba(60, 20, 35, 0.08);
+}
+
+.rb-list-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.rb-list-toggle > :not(.rb-list-chev) { grid-column: 1; }
+.rb-list-toggle .rb-org { font-size: 10.5px; margin: 0; }
+.rb-list-title { font-family: var(--display); font-weight: 800; font-size: 17px; line-height: 1.2; }
+.rb-list-toggle .rb-preview { font-size: 14px; }
+
+.rb-list-chev {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  font-size: 22px;
+  color: var(--raspberry);
+}
+
+.rb-list-body {
+  padding: 0 16px 16px;
+}
+
+.rb-list-figure {
+  height: auto;
+  margin-bottom: 14px;
+  padding: 8px;
+  transform: none;
+}
+
+.rb-list-figure .rb-sketch { width: 100%; height: auto; }
+.rb-list .rb-body { font-size: 15px; }
+.rb-list .rb-topics li { font-size: 11px; }
+.rb-list .rb-links li { font-size: 14px; }
+
+/* image viewer */
+.rb-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 4vw;
+  background: rgba(40, 8, 22, 0.78);
+  animation: rb-fade 0.2s ease both;
+}
+
+@keyframes rb-fade {
+  from { opacity: 0; }
+}
+
+.rb-viewer figure {
+  margin: 0;
+  padding: 12px 12px 10px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.rb-viewer img {
+  display: block;
+  max-width: calc(92vw - 24px);
+  max-height: calc(86vh - 60px);
+  object-fit: contain;
+}
+
+.rb-viewer figcaption {
+  max-width: 70ch;
+  padding-top: 8px;
+  font-size: 13px;
+  color: #5e1a3a;
+}
+
+.rb-viewer-close {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--burgundy);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
 
 /* Monitor */
 .screen {

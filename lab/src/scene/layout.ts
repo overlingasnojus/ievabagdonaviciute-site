@@ -62,7 +62,9 @@ export const RUG = { center: v(2.55, 0, 1.75), w: 3.0, d: 2.2 };
 // --- interactive objects -----------------------------------------------------
 
 export const NOTEBOOK = {
-  w: 0.62, // page width, from the spine
+  // page width, from the spine; slightly wider than a portrait page so the spread
+  // makes use of wide, short windows
+  w: 0.68,
   h: 0.78,
   t: 0.14,
   rest: v(CABINET.x + CABINET.depth / 2 - 0.04, CABINET.shelves[1] + 0.03 + 0.41, CABINET.z + 0.18),
@@ -141,10 +143,12 @@ export const SHOTS: Record<Exclude<SectionId, 'cv'>, ShotSpec> = {
     target: NOTEBOOK.read,
     dir: NOTEBOOK.readDir.clone().add(v(0, 0.1, 0)).normalize(),
     surface: [NOTEBOOK.w * 2 + 0.06, NOTEBOOK.h + 0.04],
-    fill: 0.8,
-    fillW: 0.9,
+    // as large as the space under the header allows (see sectionShot)
+    fill: 0.94,
+    fillW: 0.97,
   },
-  research: { target: WHITEBOARD.center, dir: v(0.08, 0.03, 1).normalize(), surface: [WHITEBOARD.w, WHITEBOARD.h], fill: 0.74 },
+  // the board fills most of the view, with its frame and a little lab around it
+  research: { target: WHITEBOARD.center, dir: v(0.08, 0.03, 1).normalize(), surface: [WHITEBOARD.w + 0.3, WHITEBOARD.h + 0.3], fill: 0.95, fillW: 0.95 },
   projects: { target: MONITOR.center, dir: v(0.1, 0.1, 1).normalize(), surface: [MONITOR.w, MONITOR.h], fill: 0.66 },
   beyond: { target: SCRAPBOOK_READ, dir: SCRAPBOOK.readDir, surface: [SCRAPBOOK.w * 2, SCRAPBOOK.h], fill: 0.34 },
 };

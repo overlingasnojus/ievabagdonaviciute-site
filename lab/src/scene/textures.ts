@@ -327,7 +327,7 @@ export const pageEdges = memo(() =>
   }),
 );
 
-export const NOTEBOOK_ROSE = '#B9677E';
+export const NOTEBOOK_ROSE = '#9C3F62';
 
 export const notebookCover = memo(() =>
   pixelTexture(62, 82, (ctx, w, h) => {
@@ -363,8 +363,8 @@ export const notebookSpine = memo(() =>
 export const notebookPage = memo(() =>
   pixelTexture(96, 128, (ctx, w, h) => {
     // Warm ivory paper: a fine fibre grain and a slightly warmer edge.
-    px(ctx, 0, 0, w, h, '#FCF6EC');
-    speckle(ctx, w, h, ['#F8EFE2', '#FEFAF4'], 0.12, 29);
+    px(ctx, 0, 0, w, h, '#FBF3E6');
+    speckle(ctx, w, h, ['#F7EDDF', '#FDF8F0'], 0.1, 29);
     speckle(ctx, w, h, ['#F3E7D6'], 0.015, 31);
     for (let i = 0; i < 2; i++) {
       px(ctx, 0, i, w, 1, shade('#FCF6EC', -0.015 + i * 0.007));

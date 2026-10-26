@@ -8,20 +8,26 @@ import { Box } from './parts';
 import { surfaces } from './registry';
 import { whiteboardBase, whiteboardSketch } from './textures';
 
-// Research: the board's doodles fade back so an interface can sit inside its frame.
+// Research: the board's doodles are wiped away completely and an opaque research
+// board (HTML, see ResearchBoard) takes over the whole writing surface inside the frame.
 
 export function Whiteboard() {
   const sketch = useRef<THREE.MeshBasicMaterial>(null);
+  const sketchMesh = useRef<THREE.Mesh>(null);
   const surface = useRef<THREE.Object3D>(null);
   const { center, w, h } = WHITEBOARD;
 
   useEffect(() => {
-    if (surface.current) surfaces.research = { object: surface.current, size: [w - 0.3, h - 0.3] };
+    // the whole writing surface, so nothing of the board shows around the research
+    if (surface.current) surfaces.research = { object: surface.current, size: [w - 0.02, h - 0.02] };
     return () => void delete surfaces.research;
   }, [w, h]);
 
   useFrame(() => {
-    if (sketch.current) sketch.current.opacity = 1 - 0.93 * anim.research.sketch;
+    const s = anim.research.sketch;
+    if (sketch.current) sketch.current.opacity = 1 - s;
+    // fully hidden once wiped, restored on the way back to the lab
+    if (sketchMesh.current) sketchMesh.current.visible = s < 0.999;
   });
 
   const frame = '#D8D3DA';
@@ -33,7 +39,7 @@ export function Whiteboard() {
           <planeGeometry args={[w, h]} />
           <meshStandardMaterial map={whiteboardBase()} roughness={0.35} emissive="#ffffff" emissiveMap={whiteboardBase()} emissiveIntensity={0.22} />
         </mesh>
-        <mesh position={[0, 0, 0.034]} userData={{ noHighlight: true }}>
+        <mesh ref={sketchMesh} position={[0, 0, 0.034]} userData={{ noHighlight: true }}>
           <planeGeometry args={[w, h]} />
           <meshBasicMaterial ref={sketch} map={whiteboardSketch()} transparent depthWrite={false} />
         </mesh>
