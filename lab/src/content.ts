@@ -86,11 +86,10 @@ export const PLACEHOLDERS = {
   projects: { title: 'Projects', note: 'Experiments loading…' },
   beyond: { title: 'Beyond the lab', note: 'A little more of me, coming soon.' },
   cv: {
-    name: 'Ieva Bagdonavičiūtė',
     title: 'Curriculum Vitae',
-    note: 'CV coming soon.',
-    // Drop the PDF into lab/public/ and set this to e.g. './ieva-bagdonaviciute-cv.pdf'
-    // to enable the download button.
+    /** Page images rendered from the PDF (see lab/README.md to regenerate them). */
+    pages: ['./cv/page-1.png', './cv/page-2.png'],
+    /** Set to null to hide the download button. */
     pdfUrl: './ieva-bagdonaviciute-cv.pdf' as string | null,
   },
 };

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PLACEHOLDERS, SECTION_BY_ID, type SectionId } from '../content';
 import { dom } from '../scene/registry';
 import { AboutNotebook } from './AboutNotebook';
@@ -76,32 +76,50 @@ function Beyond() {
 
 function Cv() {
   const c = PLACEHOLDERS.cv;
+  const [zoomed, setZoomed] = useState(false);
+  const scroll = useRef<HTMLDivElement>(null);
+  const toggleZoom = () => {
+    const el = scroll.current;
+    const ratio = el ? el.scrollTop / Math.max(1, el.scrollHeight) : 0;
+    setZoomed((z) => !z);
+    // keep roughly the same place in the document after the zoom
+    requestAnimationFrame(() => {
+      if (!el) return;
+      el.scrollTop = ratio * el.scrollHeight;
+      el.scrollLeft = 0;
+    });
+  };
   return (
-    <article className="paper">
-      <p className="kicker">05 · CV</p>
-      <h2 id="section-title" tabIndex={-1}>
-        {c.name}
+    <div className="cv" data-zoomed={zoomed || undefined}>
+      <h2 id="section-title" className="sr-only" tabIndex={-1}>
+        {c.title}
       </h2>
-      <p className="doc-title">{c.title}</p>
-      <hr />
-      <p className="note">{c.note}</p>
-      <div className="actions">
-        {c.pdfUrl ? (
+      {/* the pages scroll inside the viewer; focusable so arrow keys and Page Down work */}
+      <div ref={scroll} className="cv-scroll" tabIndex={0} role="document" aria-label="Curriculum vitae, two pages" data-autofocus>
+        {c.pages.map((src, i) => (
+          <img
+            key={src}
+            className="cv-page"
+            src={src}
+            alt={`Ieva Bagdonaviciute, CV page ${i + 1} of ${c.pages.length}. The full text is in the downloadable PDF.`}
+            width={1530}
+            height={1980}
+            decoding="async"
+          />
+        ))}
+      </div>
+      <div className="cv-actions">
+        {/* only shown on narrow screens, where a fitted page is too small to read */}
+        <button type="button" className="btn btn-light cv-zoom" onClick={toggleZoom} aria-pressed={zoomed}>
+          {zoomed ? 'Fit width' : 'Zoom in'}
+        </button>
+        {c.pdfUrl && (
           <a className="btn" href={c.pdfUrl} download>
             Download PDF
           </a>
-        ) : (
-          <>
-            <button type="button" className="btn" disabled aria-describedby="pdf-status">
-              Download PDF
-            </button>
-            <span id="pdf-status" className="status">
-              PDF coming soon
-            </span>
-          </>
         )}
       </div>
-    </article>
+    </div>
   );
 }
 
@@ -116,7 +134,9 @@ export function SectionLayer() {
   });
 
   useEffect(() => {
-    if (phase === 'open') surface.current?.querySelector<HTMLElement>('#section-title')?.focus({ preventScroll: true });
+    if (phase !== 'open' || !surface.current) return;
+    const target = surface.current.querySelector<HTMLElement>('[data-autofocus]') ?? surface.current.querySelector<HTMLElement>('#section-title');
+    target?.focus({ preventScroll: true });
   }, [phase]);
 
   const Content = section ? CONTENT[section] : null;

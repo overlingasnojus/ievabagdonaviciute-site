@@ -5,6 +5,7 @@ import { SECTIONS, type SectionId } from '../content';
 import { anim } from '../state/anim';
 import { getNav } from '../state/nav';
 import { HOTSPOTS } from './layout';
+import { cvViewerRect } from './cvViewer';
 import { dom, surfaces } from './registry';
 
 // Runs last each frame: pins DOM hotspots and the open section's HTML surface to their
@@ -16,7 +17,7 @@ const MIN_ANCHORED: Record<SectionId, [number, number]> = {
   research: [380, 220],
   projects: [380, 220],
   beyond: [420, 220],
-  cv: [260, 320],
+  cv: [0, 0], // unused: the CV always uses the viewer layout
 };
 
 const tmp = new THREE.Vector3();
@@ -81,7 +82,17 @@ export function Projector() {
     const el = dom.surface;
     const target = id ? surfaces[id] : undefined;
     // Only lay the surface out while it is (becoming) visible; until then it has nothing to show.
-    if (id && el && target && anim.ui.content > 0.0005) {
+    if (id === 'cv' && el && anim.ui.content > 0.0005) {
+      // The CV is a scrollable document viewer; the flying page lands exactly on it.
+      const r = cvViewerRect(size.width, size.height);
+      if (el.dataset.mode !== 'viewer') el.dataset.mode = 'viewer';
+      el.style.transform = '';
+      el.style.left = `${r.left}px`;
+      el.style.top = `${r.top}px`;
+      el.style.width = `${r.width}px`;
+      el.style.height = `${r.height}px`;
+      el.style.opacity = anim.ui.content.toFixed(3);
+    } else if (id && el && target && anim.ui.content > 0.0005) {
       const [w, h] = target.size;
       const o = target.object;
       corners[0].set(-w / 2, h / 2, 0); // top-left

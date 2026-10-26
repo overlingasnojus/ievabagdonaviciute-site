@@ -1,17 +1,19 @@
-import { useEffect, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { anim } from '../state/anim';
 import { HitBox, Interactive } from './Interactive';
 import { CAMERA, DESK, PALETTE as P, PAPER, PEDESTAL } from './layout';
 import { Box } from './parts';
-import { surfaces } from './registry';
-import { paperLinesTexture, paperTexture } from './textures';
+import { PLACEHOLDERS } from '../content';
+import { cvViewerRect } from './cvViewer';
+import { surfaces, viewport } from './registry';
 import { quadBezier } from './Notebook';
 
-// CV: the camera stays put. The top drawer of the pedestal slides out, a sheet of paper
-// rises from it and flies toward the viewer, turning to face them, and settles as a
-// large centred page. A translucent veil just behind the page dims the room.
+// CV: the camera stays put. The top drawer of the pedestal slides out, the first page of
+// the CV rises from it and flies toward the viewer, turning to face them, and settles
+// exactly where the scrollable HTML document viewer appears (see cvViewer.ts). A
+// translucent veil just behind the page dims the room.
 
 const { x0, x1, z0, z1, drawerH, travel } = PEDESTAL;
 const cx = (x0 + x1) / 2;
@@ -34,9 +36,17 @@ const v = {
   q2: new THREE.Quaternion(),
 };
 
-/** Distance in front of the camera at which the paper fills most of the viewport. */
-function viewDistance(aspect: number) {
-  return Math.max(PAPER.h / (0.8 * 2 * TAN_V), PAPER.w / (0.9 * 2 * TAN_V * aspect));
+/**
+ * Distance in front of the camera, and the screen height (NDC y) of the page centre,
+ * at which the paper exactly covers the viewer's width with its top edge at the
+ * viewer's top. The page is taller than the viewer; the rest is reached by scrolling.
+ */
+function viewPose(aspect: number) {
+  const { width: vw, height: vh } = viewport;
+  const rect = cvViewerRect(vw, vh);
+  const D = (PAPER.w * vw) / (2 * TAN_V * aspect * rect.width);
+  const centreY = rect.top + (rect.width * (PAPER.h / PAPER.w)) / 2;
+  return { D, ndcY: 1 - (2 * centreY) / vh };
 }
 
 export function Cv() {
@@ -44,7 +54,16 @@ export function Cv() {
   const paper = useRef<THREE.Mesh>(null);
   const veil = useRef<THREE.Mesh>(null);
   const veilMat = useRef<THREE.MeshBasicMaterial>(null);
-  const linesMat = useRef<THREE.MeshBasicMaterial>(null);
+  const gl = useThree((st) => st.gl);
+  // The flying sheet is the real first page of the CV, so the hand-off to the HTML
+  // viewer is seamless. Loaded in the background; plain paper until then.
+  const pageTexture = useMemo(() => {
+    const t = new THREE.TextureLoader().load(PLACEHOLDERS.cv.pages[0]);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = gl.capabilities.getMaxAnisotropy();
+    return t;
+  }, [gl]);
+  useEffect(() => () => pageTexture.dispose(), [pageTexture]);
 
   useEffect(() => {
     if (paper.current) surfaces.cv = { object: paper.current, size: [PAPER.w, PAPER.h] };
@@ -70,9 +89,9 @@ export function Cv() {
     v.q.multiply(v.q2.setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.35 * c.lift));
 
     if (c.fly > 0) {
-      const D = viewDistance(cam.aspect);
+      const { D, ndcY } = viewPose(cam.aspect);
       cam.getWorldDirection(v.fwd);
-      v.ray.set(0, 0, 0.5).unproject(cam).sub(cam.position).normalize();
+      v.ray.set(0, ndcY, 0.5).unproject(cam).sub(cam.position).normalize();
       v.view.copy(cam.position).addScaledVector(v.ray, D / v.ray.dot(v.fwd));
 
       // Interpolate in inverse depth so the page grows at an even perceived rate
@@ -90,13 +109,15 @@ export function Cv() {
       p.quaternion.copy(v.q);
     }
 
-    if (linesMat.current) linesMat.current.opacity = 1 - anim.ui.content;
+    // Once the HTML pages are fully shown they take over; hide the sheet beneath them so
+    // it doesn't show through the gap between pages while scrolling.
+    p.visible = anim.ui.content < 0.999;
 
     const veilOn = anim.ui.dim > 0.001;
     if (veil.current && veilMat.current) {
       veil.current.visible = veilOn;
       if (veilOn) {
-        const D = viewDistance(cam.aspect) + 0.6;
+        const D = viewPose(cam.aspect).D + 0.6;
         cam.getWorldDirection(v.fwd);
         veil.current.position.copy(cam.position).addScaledVector(v.fwd, D);
         veil.current.quaternion.copy(cam.quaternion);
@@ -142,10 +163,11 @@ export function Cv() {
 
       <mesh ref={paper} castShadow userData={{ noHighlight: true }}>
         <planeGeometry args={[PAPER.w, PAPER.h]} />
-        <meshBasicMaterial map={paperTexture()} side={THREE.DoubleSide} toneMapped={false} />
-        <mesh position={[0, 0, 0.002]} userData={{ noHighlight: true }}>
+        <meshBasicMaterial map={pageTexture} toneMapped={false} />
+        {/* plain back of the sheet, so the page never reads mirrored mid-flight */}
+        <mesh rotation={[0, Math.PI, 0]} userData={{ noHighlight: true }}>
           <planeGeometry args={[PAPER.w, PAPER.h]} />
-          <meshBasicMaterial ref={linesMat} map={paperLinesTexture()} transparent depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color="#FFFDF8" toneMapped={false} />
         </mesh>
       </mesh>
 

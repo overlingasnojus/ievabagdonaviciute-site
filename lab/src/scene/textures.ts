@@ -403,23 +403,6 @@ export const scrapbookPage = memo(() =>
   }),
 );
 
-export const paperTexture = memo(() =>
-  pixelTexture(34, 44, (ctx, w, h) => {
-    px(ctx, 0, 0, w, h, '#FFFDF8');
-    px(ctx, 3, 3, w - 6, 1, P.raspberry);
-  }),
-);
-
-/** Stand-in "text" lines shown on the paper only while it is in flight. */
-export const paperLinesTexture = memo(() =>
-  pixelTexture(34, 44, (ctx, w, h) => {
-    ctx.clearRect(0, 0, w, h);
-    px(ctx, 3, 6, 16, 2, '#C9A3B3');
-    px(ctx, 3, 9, 10, 1, '#E7B9C9');
-    for (let y = 13; y < h - 4; y += 3) px(ctx, 3, y, 10 + ((y * 7) % 17), 1, '#EFE7E0');
-  }),
-);
-
 export const pawTexture = memo(() =>
   pixelTexture(10, 10, (ctx) => {
     ctx.clearRect(0, 0, 10, 10);

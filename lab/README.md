@@ -20,10 +20,16 @@ npm run build    # static site in dist/ (relative paths, works from any folder)
 | Open/close state machine and animation timelines | `src/state/nav.ts` |
 | Pixel textures (drawn in code, no image files) | `src/scene/textures.ts` |
 
-## Adding the CV PDF
+## Updating the CV
 
-Put the file in `public/` (for example `public/ieva-bagdonaviciute-cv.pdf`) and set
-`PLACEHOLDERS.cv.pdfUrl` in `src/content.ts` to `'./ieva-bagdonaviciute-cv.pdf'`. The button turns on automatically.
+The CV section shows the real PDF pages as images, so updating it takes two steps:
+
+1. Replace `public/ieva-bagdonaviciute-cv.pdf`.
+2. Re-render the pages to `public/cv/page-1.png`, `page-2.png`, and so on, at 2.5× (1530 px wide).
+   On a Mac you can do this with PDFKit; any PDF-to-PNG tool works. If the page count changes,
+   update `PLACEHOLDERS.cv.pages` in `src/content.ts`.
+
+Then run `npm run build:site`.
 
 ## How the animation works
 
