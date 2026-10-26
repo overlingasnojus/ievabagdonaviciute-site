@@ -1,11 +1,12 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { RESEARCH, type ResearchEntry, type ResearchImage } from '../content';
+import { RESEARCH, type ResearchEntry, type ResearchImage, type ResearchLink } from '../content';
+import { CARD, cardRect, HEADER, IMAGE, LINE, ORG_SPACING, TILTS, TYPE } from './researchLayout';
 
-// The Research whiteboard: an opaque board laid over the 3D whiteboard (it wipes in
-// as the board's doodles are wiped away). The overview shows every entry as a note
-// held on with magnets; choosing one expands it inside the same board while the other
-// entries move into a side strip. The camera never moves while browsing.
+// The Research whiteboard, up close. The overview is laid out from the same layout as
+// the texture painted on the 3D whiteboard (researchLayout.ts), so when it fades in
+// over that board nothing moves. Choosing an entry expands it inside the same board
+// while the others move into a side strip; the camera never moves while browsing.
 // Narrow screens get a simple list of expandable entries instead.
 
 type Mode = 'anchored' | 'panel';
@@ -19,90 +20,46 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-// --- little line drawings for entries without a real figure ----------------------
-
-const pen = { fill: 'none', stroke: '#6B2346', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
-const accent = { ...pen, stroke: '#C66F8E' };
-
-function Sketch({ kind }: { kind: NonNullable<ResearchEntry['sketch']> }) {
-  return (
-    <svg className="rb-sketch" viewBox="0 0 160 110" role="img" aria-label={SKETCH_LABEL[kind]}>
-      {kind === 'arm' && (
-        <g>
-          <path d="M30 96 L90 96" {...pen} />
-          <rect x="44" y="86" width="26" height="10" rx="2" {...pen} />
-          <path d="M57 86 L64 56 L100 38" {...pen} strokeWidth={5} stroke="#E9DCE2" />
-          <path d="M57 86 L64 56 L100 38" {...pen} />
-          <circle cx="64" cy="56" r="5" {...pen} />
-          <circle cx="100" cy="38" r="4" {...pen} />
-          <path d="M100 38 L112 52 M108 56 L112 52 L118 56" {...pen} />
-          <rect x="106" y="74" width="14" height="14" rx="1.5" {...accent} />
-          <path d="M113 62 L113 70" {...accent} strokeDasharray="2 3" />
-          <path d="M22 30 L34 30 M28 24 L28 36" {...accent} />
-        </g>
-      )}
-      {kind === 'depth' && (
-        <g>
-          <rect x="18" y="44" width="34" height="24" rx="4" {...pen} />
-          <circle cx="35" cy="56" r="7" {...pen} />
-          <path d="M52 50 L74 30 M52 62 L74 82" {...pen} strokeDasharray="3 3" />
-          <path d="M78 32 Q 98 56, 78 80" {...accent} />
-          <path d="M96 30 Q 118 56, 96 82" {...accent} opacity={0.75} />
-          <path d="M114 28 Q 138 56, 114 84" {...accent} opacity={0.5} />
-          <path d="M120 44 L136 40 L142 56 L128 62 Z" {...pen} />
-          <path d="M18 96 L142 96" {...pen} strokeDasharray="2 4" />
-        </g>
-      )}
-      {kind === 'scan' && (
-        <g>
-          {[0, 1, 2, 3].map((i) => (
-            <ellipse key={i} cx={80} cy={34 + i * 16} rx={46} ry={12} {...pen} opacity={1 - i * 0.18} />
-          ))}
-          <path d="M66 50 Q 80 40, 94 52 Q 100 66, 84 70 Q 66 72, 66 50 Z" {...accent} />
-          <path d="M34 34 L34 82 M126 34 L126 82" {...pen} />
-          <path d="M138 24 L150 24 M138 36 L148 36" {...accent} />
-        </g>
-      )}
-    </svg>
-  );
-}
-
-const SKETCH_LABEL = {
-  arm: 'Sketch of a robot arm picking up a block',
-  depth: 'Sketch of a camera capturing a scene in depth layers',
-  scan: 'Sketch of stacked imaging slices through a volume',
-};
-
 function Magnet({ tone = 'pink' }: { tone?: 'pink' | 'burgundy' | 'cream' }) {
   return <span className="magnet" data-tone={tone} aria-hidden="true" />;
 }
 
-/** The picture for an entry: its image, or its line sketch. */
-function Visual({ entry, size }: { entry: ResearchEntry; size: 'card' | 'thumb' }) {
-  const img = entry.image;
-  if (!img) return entry.sketch ? <Sketch kind={entry.sketch} /> : null;
-  return (
-    <img
-      className="rb-img"
-      data-kind={img.kind}
-      src={img.src}
-      alt={size === 'thumb' ? '' : img.alt}
-      style={img.focus ? { objectPosition: img.focus } : undefined}
-      loading="lazy"
-      decoding="async"
-    />
-  );
-}
-
 const TONES = ['pink', 'burgundy', 'cream'] as const;
-const TILT = [-1.6, 1.2, -0.8, 1.8, -1.2, 0.9];
+
+/** Board-layout values as CSS custom properties, so the CSS reads the shared numbers. */
+function layoutVars(): React.CSSProperties {
+  const pct = (f: number) => `${f * 100}`;
+  return {
+    '--hx': pct(HEADER.x),
+    '--htop': pct(HEADER.top),
+    '--htitle': pct(HEADER.title),
+    '--hhint': pct(HEADER.hint),
+    '--hgap': pct(HEADER.hintGap),
+    '--pad': pct(CARD.pad),
+    '--img': IMAGE.full,
+    '--img-c': IMAGE.compact,
+    '--org-ls': `${ORG_SPACING}em`,
+    '--gap': pct(CARD.gap),
+    '--org-gap': pct(CARD.orgGap),
+    '--title-gap': pct(CARD.titleGap),
+    '--magnet': pct(CARD.magnet),
+    '--t-org': pct(TYPE.full.org),
+    '--t-title': pct(TYPE.full.title),
+    '--t-preview': pct(TYPE.full.preview),
+    '--t-more': pct(TYPE.full.more),
+    '--c-org': pct(TYPE.compact.org),
+    '--c-title': pct(TYPE.compact.title),
+    '--c-more': pct(TYPE.compact.more),
+    '--lh-org': LINE.org,
+    '--lh-title': LINE.title,
+    '--lh-preview': LINE.preview,
+    '--lh-more': LINE.more,
+  } as React.CSSProperties;
+}
 
 // --- overview -----------------------------------------------------------------------
 
 function Overview({ onOpen, returnTo }: { onOpen: (id: string) => void; returnTo: string | null }) {
-  const featured = RESEARCH.filter((e) => e.featured);
-  const notes = RESEARCH.filter((e) => !e.featured);
-
   // When coming back from an entry, put focus back on that entry's note.
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -110,7 +67,7 @@ function Overview({ onOpen, returnTo }: { onOpen: (id: string) => void; returnTo
   }, [returnTo]);
 
   return (
-    <div ref={root} className="rb-overview">
+    <div ref={root} className="rb-overview" style={layoutVars()}>
       <header className="rb-head">
         <h2 id="section-title" className="rb-title" tabIndex={-1}>
           Research
@@ -119,48 +76,47 @@ function Overview({ onOpen, returnTo }: { onOpen: (id: string) => void; returnTo
           pick a note to read more ↘
         </p>
       </header>
-      <ul className="rb-featured" aria-label="Main research">
-        {featured.map((e, i) => (
-          <li key={e.id} className="pin" style={{ '--tilt': `${TILT[i]}deg` } as React.CSSProperties}>
-            <Magnet tone={TONES[i % 3]} />
-            <article className="paper paper-print">
-              <div className="rb-visual">
-                <Visual entry={e} size="card" />
-              </div>
-              <p className="rb-org">{e.org}</p>
-              <h3 className="rb-card-title">
-                <button type="button" className="stretch" data-entry={e.id} onClick={() => onOpen(e.id)}>
-                  {e.title}
-                </button>
-              </h3>
-              <p className="rb-preview">{e.preview}</p>
-              <span className="rb-more" aria-hidden="true">
-                Read more →
-              </span>
-            </article>
-          </li>
-        ))}
-      </ul>
-      <ul className="rb-notes" aria-label="More research">
-        {notes.map((e, i) => (
-          <li key={e.id} className="pin pin-small" style={{ '--tilt': `${TILT[i + 3]}deg` } as React.CSSProperties}>
-            <Magnet tone={TONES[(i + 1) % 3]} />
-            <article className="paper paper-note">
-              <div className="rb-thumb">
-                <Visual entry={e} size="thumb" />
-              </div>
-              <div>
+      <ul className="rb-cards">
+        {RESEARCH.map((e, i) => {
+          const r = cardRect(i);
+          return (
+            <li
+              key={e.id}
+              className="pin rb-card-pin"
+              style={
+                {
+                  left: `${r.x * 100}%`,
+                  top: `${r.y * 100}%`,
+                  width: `${r.w * 100}%`,
+                  height: `${r.h * 100}%`,
+                  '--tilt': `${TILTS[i]}deg`,
+                } as React.CSSProperties
+              }
+            >
+              <article className="paper rb-card">
+                <div className="rb-card-img" data-kind={e.image.kind}>
+                  <img
+                    src={e.image.src}
+                    alt=""
+                    style={e.image.focus ? { objectPosition: e.image.focus } : undefined}
+                    decoding="async"
+                  />
+                </div>
                 <p className="rb-org">{e.org}</p>
-                <h3 className="rb-note-title">
+                <h3 className="rb-card-title">
                   <button type="button" className="stretch" data-entry={e.id} onClick={() => onOpen(e.id)}>
                     {e.title}
                   </button>
                 </h3>
                 <p className="rb-preview">{e.preview}</p>
-              </div>
-            </article>
-          </li>
-        ))}
+                <span className="rb-more" aria-hidden="true">
+                  Read more →
+                </span>
+              </article>
+              <Magnet tone={TONES[i % 3]} />
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -168,11 +124,11 @@ function Overview({ onOpen, returnTo }: { onOpen: (id: string) => void; returnTo
 
 // --- detail -------------------------------------------------------------------------
 
-function Links({ entry }: { entry: ResearchEntry }) {
-  if (!entry.links?.length) return null;
+function Links({ links }: { links?: ResearchLink[] }) {
+  if (!links?.length) return null;
   return (
     <ul className="rb-links">
-      {entry.links.map((l) => (
+      {links.map((l) => (
         <li key={l.href}>
           {l.tag && <span className="rb-tag">{l.tag}</span>}
           {l.title && <span className="rb-link-title">{l.title}</span>}
@@ -186,6 +142,17 @@ function Links({ entry }: { entry: ResearchEntry }) {
   );
 }
 
+function Topics({ topics }: { topics?: string[] }) {
+  if (!topics?.length) return null;
+  return (
+    <ul className="rb-topics" aria-label="Topics">
+      {topics.map((t) => (
+        <li key={t}>{t}</li>
+      ))}
+    </ul>
+  );
+}
+
 function Figure({ img, onView }: { img: ResearchImage; onView: (img: ResearchImage) => void }) {
   return (
     <button type="button" className="rb-figure-btn" onClick={() => onView(img)} aria-label={`Enlarge image: ${img.alt}`}>
@@ -194,6 +161,103 @@ function Figure({ img, onView }: { img: ResearchImage; onView: (img: ResearchIma
         ⤢
       </span>
     </button>
+  );
+}
+
+/**
+ * A magnet-held print whose paper hugs the image: the white border follows the
+ * picture's own proportions and the magnet sits on the print, never on empty paper.
+ */
+function Print({
+  img,
+  onView,
+  tone = 'burgundy',
+  tilt = -0.8,
+  variant,
+}: {
+  img: ResearchImage;
+  onView: (img: ResearchImage) => void;
+  tone?: 'pink' | 'burgundy' | 'cream';
+  tilt?: number;
+  variant?: 'portrait' | 'wide';
+}) {
+  return (
+    <figure className="rb-print" data-variant={variant} style={{ '--tilt': `${tilt}deg` } as React.CSSProperties}>
+      <div className="pin rb-print-pin">
+        <div className="paper paper-print">
+          <Figure img={img} onView={onView} />
+        </div>
+        <Magnet tone={tone} />
+      </div>
+      {img.caption && <figcaption className="rb-caption">{img.caption}</figcaption>}
+    </figure>
+  );
+}
+
+function Body({ paragraphs }: { paragraphs: string[] }) {
+  return (
+    <>
+      {paragraphs.map((p) => (
+        <p key={p} className="rb-body">
+          <Rich text={p} />
+        </p>
+      ))}
+    </>
+  );
+}
+
+/** UIUC Computer Vision Group: two separate projects behind tabs. */
+function ProjectTabs({ entry, onView }: { entry: ResearchEntry; onView: (img: ResearchImage) => void }) {
+  const projects = entry.projects!;
+  const [active, setActive] = useState(0);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const p = projects[active];
+  const select = (i: number) => {
+    const n = (i + projects.length) % projects.length;
+    setActive(n);
+    tabs.current[n]?.focus();
+  };
+  return (
+    <>
+      <div className="rb-tabs" role="tablist" aria-label="Projects">
+        {projects.map((q, i) => (
+          <button
+            key={q.id}
+            ref={(el) => void (tabs.current[i] = el)}
+            type="button"
+            role="tab"
+            id={`rb-tab-${q.id}`}
+            aria-selected={i === active}
+            aria-controls={`rb-panel-${q.id}`}
+            tabIndex={i === active ? 0 : -1}
+            className="rb-tab"
+            onClick={() => setActive(i)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') select(i + 1);
+              if (e.key === 'ArrowLeft') select(i - 1);
+            }}
+          >
+            {q.tab}
+          </button>
+        ))}
+      </div>
+      <div className="rb-panel" role="tabpanel" id={`rb-panel-${p.id}`} aria-labelledby={`rb-tab-${p.id}`} key={p.id} data-has-image={p.image ? true : undefined}>
+        {p.image && <Print img={p.image} onView={onView} tilt={-0.6} />}
+        <div className="rb-panel-text">
+          <h4 className="rb-project-title">{p.title}</h4>
+          <Body paragraphs={p.body} />
+          {p.labels && (
+            <ul className="rb-labels" aria-label="Recognition">
+              {p.labels.map((l) => (
+                <li key={l}>{l}</li>
+              ))}
+            </ul>
+          )}
+          <Topics topics={p.topics} />
+          <Links links={p.links} />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -212,6 +276,54 @@ function Detail({
   useEffect(() => title.current?.focus({ preventScroll: true }), [entry.id]);
   const others = RESEARCH.filter((e) => e.id !== entry.id);
 
+  const heading = (
+    <>
+      <p className="rb-org">{entry.org}</p>
+      {entry.role && <p className="rb-role">{entry.role}</p>}
+      <h3 id="rb-entry-title" ref={title} className="rb-entry-title" tabIndex={-1}>
+        {entry.title}
+      </h3>
+    </>
+  );
+
+  let content: JSX.Element;
+  if (entry.projects) {
+    content = (
+      <article className="rb-text rb-text-full" aria-labelledby="rb-entry-title">
+        {heading}
+        <ProjectTabs entry={entry} onView={onView} />
+      </article>
+    );
+  } else if (entry.layout === 'feature') {
+    // a portrait print beside the words, the second print across the full width below
+    content = (
+      <div className="rb-feature">
+        <div className="rb-feature-top">
+          <Print img={entry.image} onView={onView} variant="portrait" tilt={-1.2} />
+          <article className="rb-text" aria-labelledby="rb-entry-title">
+            {heading}
+            <Body paragraphs={entry.body} />
+            <Topics topics={entry.topics} />
+            <Links links={entry.links} />
+          </article>
+        </div>
+        {entry.image2 && <Print img={entry.image2} onView={onView} variant="wide" tone="pink" tilt={0.4} />}
+      </div>
+    );
+  } else {
+    content = (
+      <div className="rb-main-grid">
+        <Print img={entry.image} onView={onView} />
+        <article className="rb-text" aria-labelledby="rb-entry-title">
+          {heading}
+          <Body paragraphs={entry.body} />
+          <Topics topics={entry.topics} />
+          <Links links={entry.links} />
+        </article>
+      </div>
+    );
+  }
+
   return (
     <div className="rb-detail">
       <h2 id="section-title" className="sr-only">
@@ -221,45 +333,7 @@ function Detail({
         <button type="button" className="rb-back" onClick={onBack}>
           <span aria-hidden="true">←</span> All research
         </button>
-        <div className="rb-main-grid">
-          <div className="pin pin-figure" style={{ '--tilt': '-0.8deg' } as React.CSSProperties}>
-            <Magnet tone="burgundy" />
-            <div className="paper paper-print" data-plot={entry.image?.kind === 'plot' || undefined}>
-              {entry.image ? (
-                <Figure img={entry.image} onView={onView} />
-              ) : (
-                entry.sketch && (
-                  <div className="rb-figure-sketch">
-                    <Sketch kind={entry.sketch} />
-                  </div>
-                )
-              )}
-            </div>
-            {entry.image2 && (
-              <div className="paper paper-print rb-second">
-                <Figure img={entry.image2} onView={onView} />
-              </div>
-            )}
-          </div>
-          <article className="rb-text" aria-labelledby="rb-entry-title">
-            <p className="rb-org">{entry.org}</p>
-            {entry.role && <p className="rb-role">{entry.role}</p>}
-            <h3 id="rb-entry-title" ref={title} className="rb-entry-title" tabIndex={-1}>
-              {entry.title}
-            </h3>
-            {entry.body.map((p) => (
-              <p key={p} className="rb-body">
-                <Rich text={p} />
-              </p>
-            ))}
-            <ul className="rb-topics" aria-label="Topics">
-              {entry.topics.map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-            <Links entry={entry} />
-          </article>
-        </div>
+        {content}
       </div>
       <nav className="rb-strip" aria-label="Other research">
         <p className="rb-strip-label" aria-hidden="true">
@@ -267,7 +341,7 @@ function Detail({
         </p>
         <ul>
           {others.map((e, i) => (
-            <li key={e.id} className="pin pin-strip" style={{ '--tilt': `${TILT[i] / 2}deg` } as React.CSSProperties}>
+            <li key={e.id} className="pin pin-strip" style={{ '--tilt': `${TILTS[i] / 2}deg` } as React.CSSProperties}>
               <Magnet tone={TONES[i % 3]} />
               <button type="button" className="paper paper-strip" onClick={() => onOpen(e.id)}>
                 <span className="rb-org">{e.org}</span>
@@ -301,10 +375,11 @@ function Viewer({ img, onClose }: { img: ResearchImage; onClose: () => void }) {
     };
   }, [onClose]);
   return createPortal(
-    <div className="rb-viewer" role="dialog" aria-modal="true" aria-label={img.alt} onClick={onClose}>
+    <div className="rb-viewer" role="dialog" aria-modal="true" aria-label={img.caption ?? img.alt} onClick={onClose}>
+      {/* the white mount hugs the image; the caption wraps to the image's width */}
       <figure onClick={(e) => e.stopPropagation()}>
         <img src={img.src} alt={img.alt} />
-        <figcaption>{img.alt}</figcaption>
+        {img.caption && <figcaption>{img.caption}</figcaption>}
       </figure>
       <button ref={close} type="button" className="rb-viewer-close" onClick={onClose}>
         Close <span aria-hidden="true">×</span>
@@ -315,6 +390,17 @@ function Viewer({ img, onClose }: { img: ResearchImage; onClose: () => void }) {
 }
 
 // --- narrow screens -------------------------------------------------------------------
+
+function ListPrint({ img, onView }: { img: ResearchImage; onView: (img: ResearchImage) => void }) {
+  return (
+    <figure className="rb-list-print">
+      <div className="paper paper-print rb-list-figure">
+        <Figure img={img} onView={onView} />
+      </div>
+      {img.caption && <figcaption className="rb-caption">{img.caption}</figcaption>}
+    </figure>
+  );
+}
 
 function List({ onView }: { onView: (img: ResearchImage) => void }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -338,26 +424,33 @@ function List({ onView }: { onView: (img: ResearchImage) => void }) {
               </button>
               {expanded && (
                 <div id={`rb-${e.id}`} className="rb-list-body">
-                  <div className="paper paper-print rb-list-figure">
-                    {e.image ? <Figure img={e.image} onView={onView} /> : e.sketch && <Sketch kind={e.sketch} />}
-                  </div>
-                  {e.image2 && (
-                    <div className="paper paper-print rb-list-figure">
-                      <Figure img={e.image2} onView={onView} />
-                    </div>
-                  )}
                   {e.role && <p className="rb-role">{e.role}</p>}
-                  {e.body.map((p) => (
-                    <p key={p} className="rb-body">
-                      <Rich text={p} />
-                    </p>
-                  ))}
-                  <ul className="rb-topics" aria-label="Topics">
-                    {e.topics.map((t) => (
-                      <li key={t}>{t}</li>
-                    ))}
-                  </ul>
-                  <Links entry={e} />
+                  {e.projects ? (
+                    e.projects.map((p) => (
+                      <section key={p.id} className="rb-list-project">
+                        <h4 className="rb-project-title">{p.title}</h4>
+                        {p.image && <ListPrint img={p.image} onView={onView} />}
+                        <Body paragraphs={p.body} />
+                        {p.labels && (
+                          <ul className="rb-labels" aria-label="Recognition">
+                            {p.labels.map((l) => (
+                              <li key={l}>{l}</li>
+                            ))}
+                          </ul>
+                        )}
+                        <Topics topics={p.topics} />
+                        <Links links={p.links} />
+                      </section>
+                    ))
+                  ) : (
+                    <>
+                      <ListPrint img={e.image} onView={onView} />
+                      <Body paragraphs={e.body} />
+                      {e.image2 && <ListPrint img={e.image2} onView={onView} />}
+                      <Topics topics={e.topics} />
+                      <Links links={e.links} />
+                    </>
+                  )}
                 </div>
               )}
             </li>

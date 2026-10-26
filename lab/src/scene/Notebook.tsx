@@ -27,7 +27,15 @@ export function Notebook() {
   const book = useRef<BookHandles>(null);
 
   useEffect(() => {
-    if (book.current) surfaces.about = { object: book.current.surface, size: [NOTEBOOK.w * 2 - 0.02, NOTEBOOK.h] };
+    if (book.current)
+      surfaces.about = {
+        object: book.current.surface,
+        size: [NOTEBOOK.w * 2 - 0.02, NOTEBOOK.h],
+        // open, at the reading pose: the spread's resting place once the book settles
+        final: new THREE.Matrix4()
+          .compose(NOTEBOOK.read, readQuat, new THREE.Vector3(1, 1, 1))
+          .multiply(new THREE.Matrix4().makeTranslation(book.current.surface.position)),
+      };
     return () => void delete surfaces.about;
   }, []);
 

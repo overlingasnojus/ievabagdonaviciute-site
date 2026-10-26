@@ -9,7 +9,7 @@ export const anim = {
   cam: { t: 0, section: null as SectionId | null },
   ui: { intro: 0, content: 0, dim: 0, veil: 0 },
   about: { slide: 0, float: 0, cover: 0, settle: 0 },
-  research: { sketch: 0 },
+  research: {},
   projects: { glow: 0, boot: 0 },
   beyond: { wake: 0, stretch: 0, shift: 0, rise: 0, cover: 0 },
   cv: { drawer: 0, lift: 0, fly: 0 },

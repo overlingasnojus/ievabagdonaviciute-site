@@ -4,6 +4,7 @@ import { requestSection, setHovered, takeReturnFocus, useNav } from './state/nav
 import { dom, viewport } from './scene/registry';
 import Scene from './scene/Scene';
 import { SectionLayer } from './ui/SectionLayer';
+import { pokeRobot } from './state/robot';
 import { EmailIcon, GitHubIcon, LinkedInIcon, ScholarIcon } from './ui/PixelIcons';
 
 const inert = (on: boolean) => (on ? { inert: '' } : {}) as Record<string, string>;
@@ -92,6 +93,12 @@ function Hotspots() {
           <SectionButton id={s.id} className="hotspot-btn" />
         </div>
       ))}
+      {/* keyboard way to say hi to the little robot (clicking it in the room does the same) */}
+      <div className="robot-anchor" ref={(el) => void (dom.robot = el)}>
+        <button type="button" className="robot-btn" onClick={pokeRobot}>
+          <span aria-hidden="true">♥</span> Say hi to the robot
+        </button>
+      </div>
     </div>
   );
 }

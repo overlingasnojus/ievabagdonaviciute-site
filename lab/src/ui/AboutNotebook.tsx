@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { ABOUT } from '../content';
+import { aboutReady } from '../preload';
 
 // The About notebook's pages: real, selectable HTML laid over the open 3D spread.
 // Everything lives on one spread, sized from the spread itself (cqh units), so the
@@ -92,6 +93,17 @@ export function AboutNotebook() {
   const [mode, setMode] = useState<Mode>('anchored');
   const [photo, setPhoto] = useState(0);
   const [level, setLevel] = useState(0);
+  const [, remeasure] = useReducer((n: number) => n + 1, 0);
+  // Fonts and portrait are preloaded at startup; until they're in, nothing is shown or
+  // measured, so the first visible frame already has the final layout.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    aboutReady.then(() => alive && setReady(true));
+    return () => {
+      alive = false;
+    };
+  }, []);
   const size = useRef<[number, number]>([0, 0]);
 
   // Follow the surface's anchored/panel mode and its size; re-fit when web fonts land,
@@ -103,6 +115,8 @@ export function AboutNotebook() {
       delete surface.dataset.force;
       setPhoto(0);
       setLevel(0);
+      // always re-render, so the fit is re-measured even if both were already 0
+      remeasure();
     };
     const onMode = (e: Event) => setMode((e as CustomEvent<Mode>).detail);
     surface.addEventListener('surfacemode', onMode);
@@ -132,7 +146,8 @@ export function AboutNotebook() {
 
   // Step until both pages fit. Runs before paint, so the attempts are never seen.
   useLayoutEffect(() => {
-    if (mode !== 'anchored' || !root.current) return;
+    // measure only with the real fonts and photo in place
+    if (!ready || mode !== 'anchored' || !root.current) return;
     const over = (sel: string) => {
       const p = root.current!.querySelector<HTMLElement>(sel);
       return !!p && p.scrollHeight > p.clientHeight + 1;
@@ -165,6 +180,7 @@ export function AboutNotebook() {
       ref={root}
       className="nb"
       data-layout={anchored ? 'spread' : 'scroll'}
+      data-ready={ready || undefined}
       data-robot={anchored && lv.robot === false ? 'off' : undefined}
       data-spacing={anchored ? lv.spacing : undefined}
       style={{ '--photo': anchored ? PHOTO[photo] : 0.84, '--nb-scale': anchored ? lv.scale : 1 } as React.CSSProperties}
@@ -194,11 +210,14 @@ export function AboutNotebook() {
         </section>
         <section className="nb-page nb-right" aria-label="About, continued">
           <Dashes className="nb-doodle nb-doodle-corner" />
-          {ABOUT.right.map((p) => (
-            <p key={p} className="nb-p" style={r()}>
-              <Rich text={p} />
-            </p>
-          ))}
+          {/* the paragraphs share the page height evenly instead of bunching at the top */}
+          <div className="nb-right-text">
+            {ABOUT.right.map((p) => (
+              <p key={p} className="nb-p" style={r()}>
+                <Rich text={p} />
+              </p>
+            ))}
+          </div>
           <div className="nb-robot-wrap" style={r()}>
             <RobotSketch />
           </div>

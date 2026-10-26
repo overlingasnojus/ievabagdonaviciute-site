@@ -360,18 +360,27 @@ export const notebookSpine = memo(() =>
   }),
 );
 
-export const notebookPage = memo(() =>
-  pixelTexture(96, 128, (ctx, w, h) => {
-    // Warm ivory paper: a fine fibre grain and a slightly warmer edge.
-    px(ctx, 0, 0, w, h, '#FBF3E6');
-    speckle(ctx, w, h, ['#F7EDDF', '#FDF8F0'], 0.1, 29);
-    speckle(ctx, w, h, ['#F3E7D6'], 0.015, 31);
-    for (let i = 0; i < 2; i++) {
-      px(ctx, 0, i, w, 1, shade('#FCF6EC', -0.015 + i * 0.007));
-      px(ctx, 0, h - 1 - i, w, 1, shade('#FCF6EC', -0.015 + i * 0.007));
+export const notebookPage = memo(() => {
+  // Warm ivory paper: a fine, low-contrast fibre grain, smoothly filtered so it reads as
+  // texture rather than pixels behind the text.
+  const t = softTexture(256, 320, (ctx, w, h) => {
+    ctx.fillStyle = '#FBF4E8';
+    ctx.fillRect(0, 0, w, h);
+    const r = rng(29);
+    for (let i = 0; i < w * h * 0.35; i++) {
+      const v = r();
+      ctx.fillStyle = v < 0.5 ? 'rgba(160,120,90,0.035)' : 'rgba(255,255,255,0.08)';
+      ctx.fillRect(Math.floor(r() * w), Math.floor(r() * h), 1 + Math.floor(r() * 2), 1);
     }
-  }),
-);
+    const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
+    g.addColorStop(0, 'rgba(255,250,240,0)');
+    g.addColorStop(1, 'rgba(214,190,160,0.12)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  });
+  t.anisotropy = 8;
+  return t;
+});
 
 /** Pink index tab reading ABOUT, letters stacked top to bottom. */
 export const aboutTab = memo(() =>
@@ -383,16 +392,23 @@ export const aboutTab = memo(() =>
 );
 
 export const scrapbookCover = memo(() =>
-  pixelTexture(28, 32, (ctx, w, h) => {
-    px(ctx, 0, 0, w, h, '#D6AE86');
-    speckle(ctx, w, h, ['#CBA27A', '#DDB993'], 0.15, 23);
-    px(ctx, 6, 7, 16, 18, '#FFFFFF');
-    px(ctx, 8, 9, 12, 11, '#F2A9BF');
-    px(ctx, 8, 15, 12, 5, '#9DBBB0');
-    px(ctx, 13, 11, 3, 3, '#FBE7A8');
-    px(ctx, 3, 4, 10, 3, 'rgba(232,140,170,0.9)');
-    px(ctx, 17, 23, 9, 3, 'rgba(159,211,224,0.9)');
-    pixelHeart(ctx, 2, 26, 1, P.raspberry);
+  pixelTexture(62, 64, (ctx, w, h) => {
+    // the same dusty-rose cloth as the About notebook, dressed up as a scrapbook
+    px(ctx, 0, 0, w, h, NOTEBOOK_ROSE);
+    const r = rng(23);
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) if ((x + y) % 2 === 0 && r() < 0.35) px(ctx, x, y, 1, 1, shade(NOTEBOOK_ROSE, (r() - 0.5) * 0.05));
+    px(ctx, 0, 0, 5, h, shade(NOTEBOOK_ROSE, -0.07));
+    // a taped snapshot
+    px(ctx, 17, 13, 30, 30, '#FFFDF8');
+    px(ctx, 20, 16, 24, 20, '#F2A9BF');
+    px(ctx, 20, 28, 24, 8, '#9DBBB0');
+    px(ctx, 28, 19, 5, 5, '#FBE7A8');
+    px(ctx, 25, 10, 14, 5, 'rgba(250,215,225,0.85)');
+    // stickers
+    pixelHeart(ctx, 46, 46, 1, '#FBE7A8');
+    px(ctx, 10, 50, 7, 7, '#9FD3E0');
+    px(ctx, 12, 52, 3, 3, '#FFFDF8');
   }),
 );
 
@@ -605,5 +621,13 @@ export const blossomLayer = memo(() =>
     cluster(20, 30, 7);
     // petals drifting
     for (let i = 0; i < 14; i++) px(ctx, Math.floor(r() * w), Math.floor(30 + r() * 70), 1, 1, '#F7C6D4');
+  }),
+);
+
+/** Pixel heart for the robot's happy eyes. */
+export const heartEyeTexture = memo(() =>
+  pixelTexture(7, 6, (ctx) => {
+    ctx.clearRect(0, 0, 7, 6);
+    pixelHeart(ctx, 0, 0, 1, '#F28DB2');
   }),
 );

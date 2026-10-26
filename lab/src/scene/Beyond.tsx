@@ -7,7 +7,7 @@ import { HitBox, Interactive } from './Interactive';
 import { CAT, facing, SCRAPBOOK, SCRAPBOOK_READ } from './layout';
 import { Blob, Box } from './parts';
 import { surfaces } from './registry';
-import { scrapbookCover, scrapbookPage } from './textures';
+import { NOTEBOOK_ROSE, notebookPage, notebookSpine, scrapbookCover } from './textures';
 import { quadBezier } from './Notebook';
 
 // Beyond: a blocky cat sleeps with its paws on a scrapbook. It wakes, stretches and
@@ -155,7 +155,15 @@ function Scrapbook() {
   const book = useRef<BookHandles>(null);
 
   useEffect(() => {
-    if (book.current) surfaces.beyond = { object: book.current.surface, size: [SCRAPBOOK.w * 2, SCRAPBOOK.h] };
+    if (book.current)
+      surfaces.beyond = {
+        object: book.current.surface,
+        size: [SCRAPBOOK.w * 2 - 0.02, SCRAPBOOK.h],
+        // open at the reading pose, so the chapter pages are laid out before they show
+        final: new THREE.Matrix4()
+          .compose(SCRAPBOOK_READ, readQuat, new THREE.Vector3(1, 1, 1))
+          .multiply(new THREE.Matrix4().makeTranslation(book.current.surface.position)),
+      };
     return () => void delete surfaces.beyond;
   }, []);
 
@@ -172,7 +180,18 @@ function Scrapbook() {
   });
 
   return (
-    <Book ref={book} w={SCRAPBOOK.w} h={SCRAPBOOK.h} t={SCRAPBOOK.t} coverColor="#D6AE86" coverMap={scrapbookCover()} spineMap={scrapbookCover()} pageMap={scrapbookPage()} />
+    <Book
+      ref={book}
+      w={SCRAPBOOK.w}
+      h={SCRAPBOOK.h}
+      t={SCRAPBOOK.t}
+      coverColor={NOTEBOOK_ROSE}
+      coverMap={scrapbookCover()}
+      spineMap={notebookSpine()}
+      pageMap={notebookPage()}
+      overhang={0.02}
+      stitches
+    />
   );
 }
 

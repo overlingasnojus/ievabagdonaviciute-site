@@ -62,12 +62,11 @@ export const RUG = { center: v(2.55, 0, 1.75), w: 3.0, d: 2.2 };
 // --- interactive objects -----------------------------------------------------
 
 export const NOTEBOOK = {
-  // page width, from the spine; slightly wider than a portrait page so the spread
-  // makes use of wide, short windows
-  w: 0.68,
-  h: 0.78,
+  // page width (from the spine) and height: portrait pages, like a real notebook
+  w: 0.62,
+  h: 0.79,
   t: 0.14,
-  rest: v(CABINET.x + CABINET.depth / 2 - 0.04, CABINET.shelves[1] + 0.03 + 0.41, CABINET.z + 0.18),
+  rest: v(CABINET.x + CABINET.depth / 2 - 0.04, CABINET.shelves[1] + 0.03 + 0.415, CABINET.z + 0.18),
   restQuat: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI),
   slide: 0.75,
   /** Where it floats to be read, and the direction the open pages face. */
@@ -88,7 +87,7 @@ const catQuat = facing(CAT.heading);
 const flatQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
 
 export const SCRAPBOOK = {
-  w: 0.52,
+  w: 0.58,
   h: 0.6,
   t: 0.09,
   // Lying under the cat's front paws, spine toward the cat's left.
@@ -143,14 +142,16 @@ export const SHOTS: Record<Exclude<SectionId, 'cv'>, ShotSpec> = {
     target: NOTEBOOK.read,
     dir: NOTEBOOK.readDir.clone().add(v(0, 0.1, 0)).normalize(),
     surface: [NOTEBOOK.w * 2 + 0.06, NOTEBOOK.h + 0.04],
-    // as large as the space under the header allows (see sectionShot)
-    fill: 0.94,
-    fillW: 0.97,
+    // large, but with a small margin so the whole book, cover and thickness show
+    fill: 0.9,
+    fillW: 0.93,
   },
   // the board fills most of the view, with its frame and a little lab around it
   research: { target: WHITEBOARD.center, dir: v(0.08, 0.03, 1).normalize(), surface: [WHITEBOARD.w + 0.3, WHITEBOARD.h + 0.3], fill: 0.95, fillW: 0.95 },
-  projects: { target: MONITOR.center, dir: v(0.1, 0.1, 1).normalize(), surface: [MONITOR.w, MONITOR.h], fill: 0.66 },
-  beyond: { target: SCRAPBOOK_READ, dir: SCRAPBOOK.readDir, surface: [SCRAPBOOK.w * 2, SCRAPBOOK.h], fill: 0.34 },
+  // the screen fills most of the view (bezel and a little desk around it) for browsing
+  projects: { target: MONITOR.center, dir: v(0.1, 0.1, 1).normalize(), surface: [MONITOR.w + 0.16, MONITOR.h + 0.16], fill: 0.92, fillW: 0.94 },
+  // big enough to browse the chapters, with the cat and a little lab around it
+  beyond: { target: SCRAPBOOK_READ, dir: SCRAPBOOK.readDir, surface: [SCRAPBOOK.w * 2 + 0.06, SCRAPBOOK.h + 0.04], fill: 0.86, fillW: 0.9 },
 };
 
 /** Room hotspot anchors, next to each object. */

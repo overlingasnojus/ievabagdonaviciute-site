@@ -4,9 +4,11 @@ import * as THREE from 'three';
 import { SECTIONS, type SectionId } from '../content';
 import { anim } from '../state/anim';
 import { getNav } from '../state/nav';
-import { HOTSPOTS } from './layout';
+import { robot } from '../state/robot';
+import { CAMERA, HOTSPOTS } from './layout';
 import { cvViewerRect } from './cvViewer';
-import { dom, surfaces } from './registry';
+import { dom, surfaces, viewport } from './registry';
+import { applyShotTo, sectionShot } from './rig';
 
 // Runs last each frame: pins DOM hotspots and the open section's HTML surface to their
 // 3D objects, pushes animation values into CSS, then renders.
@@ -17,8 +19,8 @@ const MIN_ANCHORED: Record<SectionId, [number, number]> = {
   // keeps the two-page spread and fits its content (see AboutNotebook).
   about: [520, 330],
   research: [620, 340], // below this the board becomes a simple expandable list
-  projects: [380, 220],
-  beyond: [420, 220],
+  projects: [480, 300], // below this the desktop becomes a screen-sized panel
+  beyond: [560, 300], // below this the scrapbook shows one chapter at a time in a panel
   cv: [0, 0], // unused: the CV always uses the viewer layout
 };
 
@@ -54,10 +56,36 @@ function homography(w: number, h: number, dst: ArrayLike<number>) {
   return `matrix3d(${t[0]},${t[3]},0,${t[6]},${t[1]},${t[4]},0,${t[7]},0,0,1,0,${t[2]},${t[5]},0,${t[8]})`;
 }
 const corners = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+const tmp2 = new THREE.Vector3();
+
+// --- final size: where a surface will be once the camera and object have arrived ----
+
+const finalCam = new THREE.PerspectiveCamera(CAMERA.fov, 1, CAMERA.near, CAMERA.far);
+const finalCache = { key: '', size: [0, 0] as [number, number] };
+
+function finalSize(id: SectionId, final: THREE.Matrix4, w: number, h: number, vw: number, vh: number): [number, number] {
+  const key = `${id}:${vw}x${vh}:${w}x${h}:${final.elements.join(',')}`;
+  if (finalCache.key === key) return finalCache.size;
+  applyShotTo(finalCam, sectionShot(id, viewport), viewport);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [sx, sy] of [[-1, 1], [1, 1], [1, -1], [-1, -1]]) {
+    tmp.set((sx * w) / 2, (sy * h) / 2, 0).applyMatrix4(final).project(finalCam);
+    const x = ((tmp.x + 1) / 2) * vw;
+    const y = ((1 - tmp.y) / 2) * vh;
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  }
+  finalCache.key = key;
+  finalCache.size = [Math.round(maxX - minX), Math.round(maxY - minY)];
+  return finalCache.size;
+}
 
 export function Projector() {
   const lastIntro = useRef(-1);
   const lastSize = useRef<[number, number]>([0, 0]);
+  const lastEl = useRef<HTMLElement | null>(null);
 
   useFrame(({ gl, scene, camera, size }) => {
     scene.updateMatrixWorld();
@@ -73,6 +101,11 @@ export function Projector() {
       el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
     }
 
+    if (dom.robot) {
+      const [x, y] = toScreen(robot.anchor);
+      dom.robot.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    }
+
     const root = document.documentElement;
     if (Math.abs(lastIntro.current - anim.ui.intro) > 0.001) {
       lastIntro.current = anim.ui.intro;
@@ -83,6 +116,11 @@ export function Projector() {
     const id = getNav().section;
     const el = dom.surface;
     const target = id ? surfaces[id] : undefined;
+    // A newly mounted surface element has no size yet, whatever was last applied.
+    if (el !== lastEl.current) {
+      lastEl.current = el;
+      lastSize.current = [0, 0];
+    }
     // Only lay the surface out while it is (becoming) visible; until then it has nothing to show.
     if (id === 'cv' && el && anim.ui.content > 0.0005) {
       // The CV is a scrollable document viewer; the flying page lands exactly on it.
@@ -94,7 +132,9 @@ export function Projector() {
       el.style.width = `${r.width}px`;
       el.style.height = `${r.height}px`;
       el.style.opacity = anim.ui.content.toFixed(3);
-    } else if (id && el && target && (anim.ui.content > 0.0005 || (id === 'research' && anim.research.sketch > 0.0005))) {
+    } else if (id && el && target && (anim.ui.content > 0.0005 || (target.final && getNav().phase !== 'overview'))) {
+      // Surfaces with a final pose are laid out from the moment the section starts
+      // opening, at their final size, so their content is fitted while still invisible.
       const [w, h] = target.size;
       const o = target.object;
       corners[0].set(-w / 2, h / 2, 0); // top-left
@@ -103,7 +143,7 @@ export function Projector() {
       corners[3].set(-w / 2, -h / 2, 0); // bottom-left
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       corners.forEach((c, i) => {
-        const [x, y] = toScreen(o.localToWorld(c));
+        const [x, y] = toScreen(o.localToWorld(tmp2.copy(c)));
         screen[i * 2] = x;
         screen[i * 2 + 1] = y;
         minX = Math.min(minX, x);
@@ -111,6 +151,13 @@ export function Projector() {
         minY = Math.min(minY, y);
         maxY = Math.max(maxY, y);
       });
+      const fin = target.final ? finalSize(id, target.final, w, h, size.width, size.height) : null;
+      if (fin) {
+        minX = 0;
+        minY = 0;
+        maxX = fin[0];
+        maxY = fin[1];
+      }
       const [minW, minH] = MIN_ANCHORED[id];
       // A section can also ask for the panel when its content can't fit (data-force).
       const mode = maxX - minX < minW || maxY - minY < minH || el.dataset.force === 'panel' ? 'panel' : 'anchored';
@@ -136,11 +183,9 @@ export function Projector() {
         el.style.left = el.style.top = el.style.width = el.style.height = el.style.transform = '';
         lastSize.current = [0, 0];
       }
-      // The notebook brings its blocks in one by one (see --reveal in the CSS). The
-      // research board stays opaque: it wipes in (--wipe) and its notes fade (--reveal).
-      const opacity = id === 'about' ? Math.min(1, anim.ui.content * 4) : id === 'research' ? 1 : anim.ui.content;
+      // The notebook brings its blocks in one by one (see --reveal in the CSS).
+      const opacity = id === 'about' ? Math.min(1, anim.ui.content * 4) : anim.ui.content;
       el.style.opacity = opacity.toFixed(3);
-      el.style.setProperty('--wipe', anim.research.sketch.toFixed(3));
       el.style.setProperty('--reveal', anim.ui.content.toFixed(3));
       el.style.setProperty('--boot', anim.projects.boot.toFixed(3));
     } else if (el) {

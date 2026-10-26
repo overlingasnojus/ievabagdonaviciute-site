@@ -166,8 +166,8 @@ const BUILDERS: Record<SectionId, () => gsap.core.Timeline> = {
   research() {
     const tl = base();
     travel(tl);
-    tl.to(anim.research, { sketch: 1, duration: 0.55, ease: 'power1.inOut' }, 1.05);
-    reveal(tl, 1.45);
+    // the board already shows the research; its live HTML version fades in on top
+    reveal(tl, 1.4, 0.4);
     return tl;
   },
   projects() {
@@ -176,7 +176,8 @@ const BUILDERS: Record<SectionId, () => gsap.core.Timeline> = {
     travel(tl);
     tl.to(p, { glow: 1, duration: 0.5, ease: 'power1.out' }, 1.15);
     reveal(tl, 1.45);
-    tl.to(p, { boot: 1, duration: 0.8, ease: 'none' }, 1.5);
+    // "Opening Ieva's workspace…" with its loading bar, then the desktop
+    tl.to(p, { boot: 1, duration: 1.2, ease: 'power1.inOut' }, 1.5);
     return tl;
   },
   beyond() {
