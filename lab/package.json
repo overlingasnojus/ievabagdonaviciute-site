@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:site": "tsc --noEmit && rm -rf ../static && vite build --outDir .. --emptyOutDir false"
   },
   "dependencies": {
     "@react-three/fiber": "^8.17.10",

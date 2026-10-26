@@ -6,5 +6,7 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   // three.js is most of the bundle (~310 kB gzipped); one chunk is fine for this page.
-  build: { chunkSizeWarningLimit: 1200 },
+  // Built files go in static/ so they never collide with the old site's assets/ folder,
+  // which the original blog posts still use when the build is written to the repo root.
+  build: { chunkSizeWarningLimit: 1200, assetsDir: 'static' },
 });
