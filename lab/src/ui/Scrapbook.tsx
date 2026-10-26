@@ -5,10 +5,12 @@ import { Doodle, PaperClip, Sticker, type DoodleKind, type StickerKind } from '.
 import { getNav } from '../state/nav';
 
 // Beyond: a scrapbook with one chapter per open spread, laid over the 3D book the cat
-// was sleeping on. Unlike About, it turns pages: a two-sided leaf swings around the
-// spine, carrying the current page on its front and the next chapter's page on its
-// back. The next chapter is rendered underneath before the turn starts, and every
-// photo's frame takes its shape from the file's real size, so nothing reflows mid-turn.
+// was sleeping on. Unlike About, it turns pages. Every page is one keyed element for its
+// whole life: the outgoing page itself swings around the spine (its front), and the
+// incoming page on the other side swings in behind it (its back), so nothing is copied
+// or swapped mid-turn and videos keep playing. Pages keep a fixed DOM order, so React
+// never moves a node (moving a <video> would pause it). Every photo's frame takes its
+// shape from the file's real size, so nothing reflows mid-turn.
 // Phones get one chapter at a time in a scrolling panel with the same navigation.
 
 type Mode = 'anchored' | 'panel';
@@ -39,6 +41,8 @@ interface PrintPlace {
   tape: TapeStyle[];
   corners?: boolean;
   clip?: boolean;
+  /** layered over the print above it, with a deeper shadow */
+  front?: boolean;
 }
 
 type Deco =
@@ -101,7 +105,7 @@ const COMPOSE: Record<ScrapChapter['id'], Composition> = {
     prints: [
       { side: 'left', x: 12, y: 48, w: 30, rot: -2, tape: ['grid'] },
       { side: 'right', x: 9, y: 7, w: 66, rot: 1.2, tape: ['stripe'], clip: true },
-      { side: 'right', x: 56, y: 60, w: 21, rot: 3, tape: ['dots'] },
+      { side: 'right', x: 52, y: 47, w: 27, rot: 4, tape: ['dots'], front: true },
     ],
     decos: [
       { side: 'left', kind: 'pill', text: 'touching grass', x: 50, y: 56, w: 27, rot: -5 },
@@ -121,7 +125,7 @@ const COMPOSE: Record<ScrapChapter['id'], Composition> = {
 
 // --- pieces ----------------------------------------------------------------------------
 
-function Print({ m, place, still }: { m: ScrapMedia; place: PrintPlace; still?: boolean }) {
+function Print({ m, place }: { m: ScrapMedia; place: PrintPlace }) {
   const reduced = reducedMotion();
   const style = {
     left: `${place.x}%`,
@@ -131,20 +135,20 @@ function Print({ m, place, still }: { m: ScrapMedia; place: PrintPlace; still?: 
     '--ar': `${m.w} / ${m.h}`,
   } as React.CSSProperties;
   return (
-    <figure className="sb-media" data-kind={m.kind} style={style}>
+    <figure className="sb-media" data-kind={m.kind} data-front={place.front || undefined} style={style}>
       {place.tape.map((t, i) => (
         <span key={i} className="sb-tape" data-tape={t} data-n={i} aria-hidden="true" />
       ))}
       {place.corners && ['tl', 'tr', 'bl', 'br'].map((c) => <span key={c} className="sb-corner" data-c={c} aria-hidden="true" />)}
       {place.clip && <PaperClip />}
-      {m.kind === 'video' && !still ? (
+      {m.kind === 'video' ? (
         <video src={m.src} poster={m.poster} width={m.w} height={m.h} muted loop playsInline autoPlay={!reduced} controls={reduced} preload="auto" aria-label={m.alt} />
       ) : (
         <img
-          src={m.kind === 'video' ? m.poster : m.src}
+          src={m.src}
           width={m.w}
           height={m.h}
-          alt={still ? '' : m.alt}
+          alt={m.alt}
           style={m.focus ? { objectPosition: m.focus } : undefined}
           decoding="sync"
         />
@@ -175,12 +179,20 @@ function Decoration({ d, chapter }: { d: Deco; chapter: ScrapChapter }) {
   );
 }
 
+/** What a page is doing in the spread: lying open, or turning as the leaf's front or back. */
+type Role = 'rest' | 'front' | 'back';
+
 /** One page of a chapter, composed from COMPOSE. */
-function Page({ chapter, side, still }: { chapter: ScrapChapter; side: Side; still?: boolean }) {
+function Page({ chapter, side, role = 'rest', scale = 1 }: { chapter: ScrapChapter; side: Side; role?: Role; scale?: number }) {
   const c = COMPOSE[chapter.id];
   const t = c.text;
   return (
-    <div className={`sb-page sb-${side}`} data-chapter={chapter.id}>
+    <div
+      className={`sb-page sb-${side}`}
+      data-chapter={chapter.id}
+      data-role={role === 'rest' ? undefined : role}
+      style={{ '--sb-scale': scale } as React.CSSProperties}
+    >
       {side === 'left' && (
         <div className="sb-text" data-torn={t.torn || undefined} style={{ left: `${t.x}%`, top: `${t.y}%`, width: `${t.w}%` }}>
           {t.torn && (
@@ -204,7 +216,7 @@ function Page({ chapter, side, still }: { chapter: ScrapChapter; side: Side; sti
           )}
         </div>
       )}
-      {chapter.media.map((m, i) => c.prints[i].side === side && <Print key={m.src} m={m} place={c.prints[i]} still={still} />)}
+      {chapter.media.map((m, i) => c.prints[i].side === side && <Print key={m.src} m={m} place={c.prints[i]} />)}
       {c.decos.map((d, i) => d.side === side && <Decoration key={i} d={d} chapter={chapter} />)}
     </div>
   );
@@ -214,14 +226,17 @@ function Page({ chapter, side, still }: { chapter: ScrapChapter; side: Side; sti
 
 export function Scrapbook() {
   const root = useRef<HTMLDivElement>(null);
-  const leaf = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>('anchored');
   const [ready, setReady] = useState(false);
   const [cur, setCur] = useState(0);
   const [turn, setTurn] = useState<{ to: number; dir: 1 | -1 } | null>(null);
-  const [fit, setFit] = useState(0);
+  /** Index into SCALES per chapter, so one chapter's text never resizes another's. */
+  const [fits, setFits] = useState<Record<string, number>>({});
   const [, remeasure] = useReducer((n: number) => n + 1, 0);
   const pending = useRef<number | null>(null);
+  // mirrors `turn` synchronously, so clicks landing in the same tick queue behind the
+  // first instead of each starting a turn of their own
+  const turning = useRef(false);
   const chapters = BEYOND.chapters;
 
   useEffect(() => {
@@ -239,7 +254,7 @@ export function Scrapbook() {
     const onMode = (e: Event) => setMode((e as CustomEvent<Mode>).detail);
     surface.addEventListener('surfacemode', onMode);
     const ro = new ResizeObserver(() => {
-      setFit(0);
+      setFits({});
       remeasure();
     });
     ro.observe(surface);
@@ -249,26 +264,31 @@ export function Scrapbook() {
     };
   }, []);
 
-  // Keep the left page's words clear of its prints: step the text down if they'd touch.
+  // Keep the left pages' words clear of their prints: step the text down if they'd touch.
+  // An incoming page is measured too, in the same pre-paint pass that starts its turn,
+  // so the scale never changes while a page is moving.
   useLayoutEffect(() => {
     if (!ready || mode !== 'anchored' || !root.current) return;
-    const page = root.current.querySelector<HTMLElement>('.sb-spread > .sb-left');
-    const text = page?.querySelector<HTMLElement>('.sb-text');
-    if (!page || !text) return;
     const box = (e: HTMLElement) => ({ l: e.offsetLeft, t: e.offsetTop, r: e.offsetLeft + e.offsetWidth, b: e.offsetTop + e.offsetHeight });
-    const tb = box(text);
-    const gap = page.clientHeight * 0.02;
-    const hits = [...page.querySelectorAll<HTMLElement>('.sb-media')].some((m) => {
-      const mb = box(m);
-      return tb.l < mb.r && tb.r > mb.l && tb.b + gap > mb.t && tb.t < mb.b;
-    });
-    if ((hits || tb.b > page.clientHeight * 0.9) && fit < SCALES.length - 1) setFit(fit + 1);
+    for (const page of root.current.querySelectorAll<HTMLElement>('.sb-spread > .sb-left')) {
+      const id = page.dataset.chapter!;
+      const fit = fits[id] ?? 0;
+      const text = page.querySelector<HTMLElement>('.sb-text');
+      if (!text || fit >= SCALES.length - 1) continue;
+      const tb = box(text);
+      const gap = page.clientHeight * 0.02;
+      const hits = [...page.querySelectorAll<HTMLElement>('.sb-media')].some((m) => {
+        const mb = box(m);
+        return tb.l < mb.r && tb.r > mb.l && tb.b + gap > mb.t && tb.t < mb.b;
+      });
+      if (hits || tb.b > page.clientHeight * 0.9) setFits((f) => ({ ...f, [id]: fit + 1 }));
+    }
   });
 
   const go = useCallback(
     (to: number) => {
       if (to < 0 || to >= chapters.length) return;
-      if (turn) {
+      if (turning.current) {
         pending.current = to; // the latest request wins; played once this turn ends
         return;
       }
@@ -277,28 +297,40 @@ export function Scrapbook() {
         setCur(to);
         return;
       }
+      turning.current = true;
       setTurn({ to, dir: to > cur ? 1 : -1 });
     },
-    [turn, cur, mode, chapters.length],
+    [cur, mode, chapters.length],
   );
 
-  // Run the page turn once the leaf (with both pages) is in the DOM.
+  // Run the page turn once both turning pages are in the DOM, before the first paint.
+  // The front swings away from 0deg and the back swings in to 0deg on one shared clock;
+  // with backfaces hidden, exactly one of them shows at any moment, handing over edge-on.
   useLayoutEffect(() => {
-    if (!turn || !leaf.current) return;
+    if (!turn || !root.current) return;
+    const front = root.current.querySelector<HTMLElement>('.sb-spread > [data-role="front"]');
+    const back = root.current.querySelector<HTMLElement>('.sb-spread > [data-role="back"]');
+    if (!front || !back) {
+      // nothing to animate (the layout switched mid-request): land on the page directly
+      turning.current = false;
+      setCur(turn.to);
+      setTurn(null);
+      return;
+    }
     const angle = turn.dir > 0 ? -180 : 180;
-    const anim = leaf.current.animate(
-      [
-        { transform: 'rotateY(0deg)' },
-        { transform: `rotateY(${angle * 0.5}deg) translateZ(14px)`, offset: 0.5 },
-        { transform: `rotateY(${angle}deg)` },
-      ],
-      { duration: TURN_MS, easing: 'cubic-bezier(0.45, 0.05, 0.3, 1)', fill: 'forwards' },
-    );
-    anim.onfinish = () => {
+    const timing = { duration: TURN_MS, easing: 'cubic-bezier(0.45, 0.05, 0.3, 1)', fill: 'forwards' } as const;
+    const out = front.animate([{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${angle}deg)` }], timing);
+    const inn = back.animate([{ transform: `rotateY(${-angle}deg)` }, { transform: 'rotateY(0deg)' }], timing);
+    out.onfinish = () => {
+      turning.current = false;
       setCur(turn.to);
       setTurn(null);
     };
-    return () => anim.cancel();
+    return () => {
+      turning.current = false;
+      out.cancel();
+      inn.cancel();
+    };
   }, [turn]);
 
   // Follow a request made during the turn.
@@ -323,12 +355,23 @@ export function Scrapbook() {
   }, [go, cur, turn]);
 
   const shown = chapters[cur];
-  const target = turn ? chapters[turn.to] : shown;
-  // During a forward turn the right page underneath already shows the next chapter
-  // (revealed as the leaf lifts); during a backward turn, the left page does.
-  const leftChapter = turn && turn.dir < 0 ? target : shown;
-  const rightChapter = turn && turn.dir > 0 ? target : shown;
   const active = turn ? turn.to : cur;
+  // The pages in the spread. At rest, the open chapter's two. During a forward turn the
+  // next chapter's right page lies underneath (revealed as the leaf lifts), the current
+  // right page is the leaf's front and the next left page its back; backward mirrors it.
+  const pages: { chapter: number; side: Side; role: Role }[] = [];
+  if (!turn) pages.push({ chapter: cur, side: 'left', role: 'rest' }, { chapter: cur, side: 'right', role: 'rest' });
+  else {
+    const fwd = turn.dir > 0;
+    pages.push(
+      { chapter: fwd ? cur : turn.to, side: 'left', role: 'rest' },
+      { chapter: fwd ? turn.to : cur, side: 'right', role: 'rest' },
+      { chapter: cur, side: fwd ? 'right' : 'left', role: 'front' },
+      { chapter: turn.to, side: fwd ? 'left' : 'right', role: 'back' },
+    );
+  }
+  // a fixed order (by chapter, then side) so a page staying in the spread is never moved
+  pages.sort((a, b) => a.chapter - b.chapter || (a.side === 'left' ? -1 : 1));
 
   const controls = (
     <>
@@ -359,7 +402,6 @@ export function Scrapbook() {
       className="sb"
       data-layout={mode === 'panel' ? 'single' : 'spread'}
       data-ready={ready || undefined}
-      style={{ '--sb-scale': SCALES[fit] } as React.CSSProperties}
     >
       <h2 id="section-title" className="sr-only" tabIndex={-1}>
         {BEYOND.title}
@@ -371,18 +413,15 @@ export function Scrapbook() {
         </div>
       ) : (
         <div className="sb-spread" data-turning={turn ? (turn.dir > 0 ? 'forward' : 'back') : undefined}>
-          <Page chapter={leftChapter} side="left" />
-          <Page chapter={rightChapter} side="right" />
-          {turn && (
-            <div ref={leaf} className="sb-leaf" data-dir={turn.dir > 0 ? 'forward' : 'back'} aria-hidden="true">
-              <div className="sb-face sb-front">
-                <Page chapter={shown} side={turn.dir > 0 ? 'right' : 'left'} still />
-              </div>
-              <div className="sb-face sb-back">
-                <Page chapter={target} side={turn.dir > 0 ? 'left' : 'right'} still />
-              </div>
-            </div>
-          )}
+          {pages.map((p) => (
+            <Page
+              key={`${chapters[p.chapter].id}-${p.side}`}
+              chapter={chapters[p.chapter]}
+              side={p.side}
+              role={p.role}
+              scale={SCALES[fits[chapters[p.chapter].id] ?? 0]}
+            />
+          ))}
         </div>
       )}
       {controls}

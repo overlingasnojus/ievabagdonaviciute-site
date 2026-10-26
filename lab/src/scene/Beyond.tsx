@@ -116,7 +116,8 @@ function Cat() {
         <Box size={[0.56, 0.27, 0.26]} position={[0, 0.145, -0.72]} color={WHITE} />
         <Box size={[0.4, 0.05, 0.62]} position={[0, 0.305, -0.45]} color={WHITE} />
         <Box size={[0.42, 0.045, 0.34]} position={[0.03, 0.315, -0.6]} color={ORANGE} />
-        <Box size={[0.22, 0.04, 0.2]} position={[-0.09, 0.31, -0.25]} color={ORANGE_DARK} />
+        {/* a hair proud of the white back (whose top is at 0.33), so the two never z-fight */}
+        <Box size={[0.22, 0.04, 0.2]} position={[-0.09, 0.316, -0.25]} color={ORANGE_DARK} />
         <Box size={[0.06, 0.2, 0.3]} position={[0.285, 0.13, -0.68]} color={ORANGE} />
         {/* tucked hind feet */}
         <Box size={[0.13, 0.07, 0.22]} position={[0.22, 0.035, -0.5]} color={WHITE} />

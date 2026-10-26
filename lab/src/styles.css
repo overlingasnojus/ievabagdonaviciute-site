@@ -768,11 +768,22 @@ button {
 
 .sb-spread {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   height: 100%;
   perspective: 2400px;
 }
+
+/* pages are stacked in place, so turning ones can lie over resting ones */
+.sb-spread > .sb-page {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  /* each page is its own layer: its stickers never rise above a page turning over it */
+  z-index: 0;
+  isolation: isolate;
+}
+
+.sb-spread > .sb-left { left: 0; }
+.sb-spread > .sb-right { left: 50%; }
 
 /* soft shadow where the pages dip into the binding */
 .sb-spread::after {
@@ -857,6 +868,11 @@ button {
   background: #fffdf9;
   box-shadow: 0 1px 1px rgba(82, 11, 45, 0.14), 0 3px 6px rgba(82, 11, 45, 0.1), 0 12px 24px rgba(82, 11, 45, 0.14);
   transform: rotate(var(--rot, 0deg));
+}
+
+.sb-media[data-front] {
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(82, 11, 45, 0.18), 0 6px 12px rgba(82, 11, 45, 0.14), 0 16px 30px rgba(82, 11, 45, 0.18);
 }
 
 .sb-media img,
@@ -1064,47 +1080,36 @@ button {
   color: var(--muted);
 }
 
-/* the turning leaf: two faces, hinged at the spine */
-.sb-leaf {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  transform-style: preserve-3d;
+/* the turning leaf: the outgoing page is its front, the incoming page its back; both
+   hinge on the spine and hide their backfaces, so one shows at a time */
+.sb-spread > [data-role] {
   z-index: 3;
-}
-
-.sb-leaf[data-dir='forward'] { left: 50%; transform-origin: left center; }
-.sb-leaf[data-dir='back'] { left: 0; transform-origin: right center; }
-
-.sb-face {
-  position: absolute;
-  inset: 0;
   backface-visibility: hidden;
-  overflow: hidden;
+  will-change: transform;
   /* paper, matching the 3D pages, with a fold shadow along the spine edge */
   background: #fbf4e8;
 }
 
-.sb-face .sb-page { height: 100%; }
+.sb-spread > .sb-right[data-role] { transform-origin: left center; }
+.sb-spread > .sb-left[data-role] { transform-origin: right center; }
+/* the back waits folded over the far side until its first frame is applied */
+.sb-spread > .sb-left[data-role='back'] { transform: rotateY(180deg); }
+.sb-spread > .sb-right[data-role='back'] { transform: rotateY(-180deg); }
 
-.sb-back { transform: rotateY(180deg); }
-
-.sb-face::after {
+.sb-spread > [data-role]::after {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 4;
   pointer-events: none;
   animation: sb-curl 0.82s cubic-bezier(0.45, 0.05, 0.3, 1) both;
 }
 
-.sb-leaf[data-dir='forward'] .sb-front::after,
-.sb-leaf[data-dir='back'] .sb-back::after {
+.sb-spread > .sb-right[data-role]::after {
   background: linear-gradient(90deg, rgba(95, 45, 45, 0.28), rgba(95, 45, 45, 0) 35%, rgba(255, 255, 255, 0.18) 70%, rgba(95, 45, 45, 0.08));
 }
 
-.sb-leaf[data-dir='forward'] .sb-back::after,
-.sb-leaf[data-dir='back'] .sb-front::after {
+.sb-spread > .sb-left[data-role]::after {
   background: linear-gradient(270deg, rgba(95, 45, 45, 0.28), rgba(95, 45, 45, 0) 35%, rgba(255, 255, 255, 0.18) 70%, rgba(95, 45, 45, 0.08));
 }
 
@@ -1985,17 +1990,13 @@ button {
   opacity: clamp(0, calc((var(--boot, 0) - 0.8) * 6), 1);
 }
 
-/* ieva.os wallpaper: a cream-to-blush sky, a small rose sun settling behind layered
-   dusty-pink hills, and a calm open middle for the windows */
+/* ieva.os wallpaper: the classic rolling-hill desktop redone in rose and blush pixels,
+   covering the desktop above the taskbar (never stretched) */
 .dt-wallpaper {
   position: absolute;
-  inset: 0;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 400' preserveAspectRatio='none'%3E%3Cpath d='M0 262 C 210 214 380 246 560 226 S 900 168 1110 206 S 1440 236 1600 196 L1600 400 L0 400Z' fill='%23EFCBD5'/%3E%3Cpath d='M0 318 C 240 276 430 306 650 288 S 1010 250 1250 296 S 1500 306 1600 284 L1600 400 L0 400Z' fill='%23E5B3C2'/%3E%3Cpath d='M0 366 C 280 330 540 360 780 344 S 1200 316 1600 356 L1600 400 L0 400Z' fill='%23D99DB1'/%3E%3C/svg%3E")
-      bottom / 100% 42% no-repeat,
-    radial-gradient(circle at 74% 78%, #c9708e 0 2.6cqw, rgba(201, 112, 142, 0) 2.7cqw),
-    radial-gradient(circle at 74% 78%, rgba(246, 196, 206, 0.6), rgba(246, 196, 206, 0) 18cqw),
-    linear-gradient(180deg, #fcf5ec 0%, #fbeee8 48%, #f7dfe2 100%);
+  inset: 0 0 var(--taskbar);
+  background: #f2d6df url('./assets/wallpaper.png') center 58% / cover no-repeat;
+  image-rendering: pixelated;
 }
 
 .dt-workspace-label {
@@ -2006,7 +2007,7 @@ button {
   font-family: 'Silkscreen', var(--mono);
   font-size: clamp(9px, 1cqw, 13px);
   letter-spacing: 0.08em;
-  color: rgba(82, 11, 45, 0.55);
+  color: rgba(82, 11, 45, 0.7);
 }
 
 /* icons */
@@ -2047,6 +2048,9 @@ button {
 
 .dt-icon-label {
   padding: 0.1em 0.35em;
+  /* a cream chip keeps labels readable over the rose hill */
+  background: rgba(255, 249, 240, 0.86);
+  box-shadow: 0 0 0 1px rgba(82, 11, 45, 0.12);
 }
 
 .dt-icon[aria-pressed='true'] .dt-icon-label {
