@@ -206,6 +206,22 @@ function PaperArrow() {
   );
 }
 
+/** A bold line with a row of small tilted photos under it. */
+function Moment({ moment, onView }: { moment: NonNullable<ResearchEntry['moment']>; onView: (img: ResearchImage) => void }) {
+  return (
+    <section className="rb-moment">
+      <p className="rb-moment-text">
+        <Rich text={moment.text} />
+      </p>
+      <div className="rb-moment-photos">
+        {moment.photos.map((p, i) => (
+          <Print key={p.src} img={p} onView={onView} variant="thumb" tone={i % 2 ? 'cream' : 'pink'} tilt={i % 2 ? 1.4 : -1.2} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Body({ paragraphs }: { paragraphs: string[] }) {
   return (
     <>
@@ -299,7 +315,25 @@ function Detail({
   );
 
   let content: JSX.Element;
-  if (entry.projects) {
+  if (entry.figures) {
+    // figures stacked beside the words, then a highlighted moment with its photos
+    content = (
+      <div className="rb-main-grid" data-figures="">
+        <div className="rb-figure-stack">
+          {entry.figures.map((f, i) => (
+            <Print key={f.src} img={f} onView={onView} tone={i % 2 ? 'pink' : 'burgundy'} tilt={i % 2 ? 0.7 : -0.8} />
+          ))}
+        </div>
+        <article className="rb-text" aria-labelledby="rb-entry-title">
+          {heading}
+          <Body paragraphs={entry.body} />
+          <Topics topics={entry.topics} />
+          {entry.moment && <Moment moment={entry.moment} onView={onView} />}
+          <Links links={entry.links} />
+        </article>
+      </div>
+    );
+  } else if (entry.projects) {
     content = (
       <article className="rb-text rb-text-full" aria-labelledby="rb-entry-title">
         {heading}
@@ -472,10 +506,13 @@ function List({ onView }: { onView: (img: ResearchImage) => void }) {
                     ))
                   ) : (
                     <>
-                      <ListPrint img={e.image} onView={onView} />
+                      {(e.figures ?? [e.image]).map((f) => (
+                        <ListPrint key={f.src} img={f} onView={onView} />
+                      ))}
                       <Body paragraphs={e.body} />
                       {e.image2 && <ListPrint img={e.image2} onView={onView} />}
                       <Topics topics={e.topics} />
+                      {e.moment && <Moment moment={e.moment} onView={onView} />}
                       <Links links={e.links} />
                     </>
                   )}

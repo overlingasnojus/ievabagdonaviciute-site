@@ -125,18 +125,11 @@ export interface ResearchEntry {
   layout?: 'feature';
   /** When present, the expanded entry shows these as tabs instead of one body. */
   projects?: ResearchProject[];
+  /** Prints shown stacked in the expanded entry in place of `image` (which stays the card picture). */
+  figures?: ResearchImage[];
+  /** A highlighted moment under the words: a bold line with a row of photos. */
+  moment?: { text: string; photos: ResearchImage[] };
 }
-
-/** Line sketch of a robot arm, used until a real NeuroAILab image is supplied. */
-const ARM_SKETCH = `data:image/svg+xml;utf8,${encodeURIComponent(
-  // viewBox trimmed to the drawing so it fills its frame, on white like the other figures
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 14 140 94"><rect x="12" y="14" width="140" height="94" fill="#ffffff"/>' +
-    '<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6">' +
-    '<g stroke="#6B2346"><path d="M30 96 L90 96"/><rect x="44" y="86" width="26" height="10" rx="2"/><path d="M57 86 L64 56 L100 38"/>' +
-    '<circle cx="64" cy="56" r="5"/><circle cx="100" cy="38" r="4"/><path d="M100 38 L112 52 M108 56 L112 52 L118 56"/></g>' +
-    '<g stroke="#C66F8E"><rect x="106" y="74" width="14" height="14" rx="1.5"/><path d="M113 62 L113 70" stroke-dasharray="2 3"/><path d="M22 30 L34 30 M28 24 L28 36"/></g>' +
-    '</g></svg>',
-)}`;
 
 export const RESEARCH: ResearchEntry[] = [
   {
@@ -148,7 +141,44 @@ export const RESEARCH: ResearchEntry[] = [
       'At **Stanford’s NeuroAILab**, I work on evaluating how **vision-language-action models** perform pick-and-place tasks with bimanual YAM robots. I’m developing a **standardized evaluation framework** across physically diverse objects, alongside a robotics interface for data collection and experiment control.',
     ],
     topics: ['Robot learning', 'VLA evaluation', 'Manipulation'],
-    image: { src: ARM_SKETCH, alt: 'Sketch of a robot arm reaching for a block', kind: 'figure' },
+    image: {
+      src: './research/psi-goal-tasks.jpg',
+      alt: 'Four views of a bimanual robot on a white table, each with a small goal image in the corner: arranging bowls and a plate, packing a bag, placing a spool, and tidying a toy rabbit into a box',
+      kind: 'photo',
+      caption: 'PsiBorg executing tasks from a single goal image on bimanual YAM robots.',
+    },
+    figures: [
+      {
+        src: './research/psi-prompts.jpg',
+        alt: 'Diagram titled “Define any capability as a prompt”: combinations of RGB frames, actions, depth, flow, camera pose and goal images on the left feed into the Psi model, which predicts next frames, depth, flow, actions or time to goal on the right',
+        kind: 'figure',
+        caption: 'Psi takes any mix of modalities as a prompt and predicts any other: frames, depth, flow, actions or time to goal.',
+      },
+      {
+        src: './research/psi-capabilities.jpg',
+        alt: 'Three capabilities of the Psi model with example robot videos: execute actions from one goal image, imagine the future, and track progress',
+        kind: 'figure',
+        caption: 'One model, three capabilities: execute actions from a goal image, imagine the future, and track progress.',
+      },
+    ],
+    moment: {
+      text: 'Presented our research demo at **CoRL 2026**',
+      photos: [
+        {
+          src: './research/corl-demo-booth.jpg',
+          alt: 'The Stanford NeuroAI Lab demo booth at CoRL 2026: a red Stanford canopy over a table with two robot arms and colourful objects, with visitors looking on',
+          kind: 'photo',
+          caption: 'Our live PsiBorg demo booth at CoRL 2026.',
+        },
+        {
+          src: './research/corl-demo-team.jpg',
+          alt: 'Ieva in a red Stanford hoodie posing with a labmate under the Stanford NeuroAI Lab canopy at CoRL 2026',
+          kind: 'photo',
+          caption: 'At the Stanford NeuroAI Lab booth.',
+        },
+      ],
+    },
+    links: [{ label: 'Read the PsiBorg blog post ↗', href: 'https://neuroailab.github.io/psi-website/psiborg/', tag: 'Blog' }],
   },
   {
     id: 'msr',

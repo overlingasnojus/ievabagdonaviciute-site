@@ -1542,6 +1542,46 @@ button {
   max-height: 44cqh;
 }
 
+/* Stanford: model figures stacked beside the words */
+.rb-figure-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2.6cqh;
+  min-width: 0;
+}
+
+.rb-figure-stack .rb-print .rb-img {
+  max-width: 40cqw;
+  max-height: 30cqh;
+}
+
+/* a highlighted moment (CoRL demo): bold line, then a row of small photos */
+.rb-moment {
+  margin: 1.4cqh 0 1.8cqh;
+}
+
+.rb-moment-text {
+  margin: 0 0 1.2cqh;
+  font-size: clamp(13px, 1.15cqw, 16px);
+  font-weight: 700;
+  color: var(--burgundy);
+}
+
+.rb-moment-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6cqw;
+}
+
+.rb-moment-photos .rb-print[data-variant='thumb'] {
+  margin: 0;
+}
+
+.rb-moment-photos .rb-print[data-variant='thumb'] .rb-img {
+  max-width: 15cqw;
+  max-height: 18cqh;
+}
+
 /* MSR: a figure from the paper right under the photo; the text column stretches to
    the same height and the preprint link sits at its foot, level with the doodled
    arrow beside the figure */
