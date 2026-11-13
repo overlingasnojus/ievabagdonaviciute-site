@@ -167,6 +167,12 @@ export const RESEARCH: ResearchEntry[] = [
       // her face and the MSR letters together
       focus: '50% 30%',
     },
+    image2: {
+      src: './research/msr-physics-figure.png',
+      alt: 'Figure from the preprint: two example tasks, each showing 8 video frames of a red cone moving toward a wall next to a yellow mat, the prompt “Will the red cone reach the yellow mat if the video continues?”, and the ideal step-by-step reasoning. On the left the wall has a hole, so the cone will reach the mat; on the right the wall is solid, so it will not.',
+      kind: 'figure',
+      caption: 'Same question, different physics: whether the red cone reaches the yellow mat depends on whether the wall has a hole.',
+    },
     links: [
       {
         label: 'Read preprint ↗',
@@ -190,16 +196,6 @@ export const RESEARCH: ResearchEntry[] = [
     },
     projects: [
       {
-        id: 'thesis',
-        tab: 'Physical reasoning thesis',
-        title: 'Teaching vision-language models to reason about physics',
-        body: [
-          'For my undergraduate thesis, I fine-tuned **vision-language models with LoRA** to explore physical reasoning. I investigated dataset scaling, difficulty-aware sample weighting, multimodal embeddings, and prompting strategies to understand what helps these models improve.',
-        ],
-        topics: ['Vision-language models', 'LoRA fine-tuning', 'Physical reasoning'],
-        labels: ['Graduated with Highest Honors', 'Undergraduate Researcher Certificate'],
-      },
-      {
         id: 'underwater',
         tab: 'Underwater reconstruction',
         title: 'Reconstructing what lies beneath the surface',
@@ -220,6 +216,16 @@ export const RESEARCH: ResearchEntry[] = [
             tag: 'Preprint',
           },
         ],
+      },
+      {
+        id: 'thesis',
+        tab: 'Physical reasoning thesis',
+        title: 'Teaching vision-language models to reason about physics',
+        body: [
+          'For my undergraduate thesis, I fine-tuned **vision-language models with LoRA** to explore physical reasoning. I investigated dataset scaling, difficulty-aware sample weighting, multimodal embeddings, and prompting strategies to understand what helps these models improve.',
+        ],
+        topics: ['Vision-language models', 'LoRA fine-tuning', 'Physical reasoning'],
+        labels: ['Graduated with Highest Honors', 'Undergraduate Researcher Certificate'],
       },
     ],
   },

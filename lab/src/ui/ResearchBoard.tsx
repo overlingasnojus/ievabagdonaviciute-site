@@ -193,6 +193,19 @@ function Print({
   );
 }
 
+/** A hand-drawn note and arrow from a figure across to the paper link. */
+function PaperArrow() {
+  return (
+    <div className="rb-callout-note" aria-hidden="true">
+      <span>from the paper!</span>
+      <svg viewBox="0 0 130 40" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 28 C 40 6, 80 34, 122 18" />
+        <path d="M106 9 L 123 18 L 108 30" />
+      </svg>
+    </div>
+  );
+}
+
 function Body({ paragraphs }: { paragraphs: string[] }) {
   return (
     <>
@@ -310,14 +323,27 @@ function Detail({
     );
   } else {
     content = (
-      <div className="rb-main-grid">
+      <div className="rb-main-grid" data-paper-figure={entry.image2 ? true : undefined}>
         <Print img={entry.image} onView={onView} />
         <article className="rb-text" aria-labelledby="rb-entry-title">
           {heading}
           <Body paragraphs={entry.body} />
           <Topics topics={entry.topics} />
-          <Links links={entry.links} />
+          {!entry.image2 && <Links links={entry.links} />}
         </article>
+        {entry.image2 && (
+          // a figure from the paper under the photo, with a doodled arrow straight across
+          // to the paper link, which shares its row
+          <>
+            <div className="rb-callout">
+              <Print img={entry.image2} onView={onView} variant="thumb" tone="pink" tilt={0.6} />
+              <PaperArrow />
+            </div>
+            <div className="rb-callout-links">
+              <Links links={entry.links} />
+            </div>
+          </>
+        )}
       </div>
     );
   }
