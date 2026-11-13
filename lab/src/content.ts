@@ -171,7 +171,7 @@ export const RESEARCH: ResearchEntry[] = [
       src: './research/msr-physics-figure.png',
       alt: 'Figure from the preprint: two example tasks, each showing 8 video frames of a red cone moving toward a wall next to a yellow mat, the prompt “Will the red cone reach the yellow mat if the video continues?”, and the ideal step-by-step reasoning. On the left the wall has a hole, so the cone will reach the mat; on the right the wall is solid, so it will not.',
       kind: 'figure',
-      caption: 'Same question, different physics: whether the red cone reaches the yellow mat depends on whether the wall has a hole.',
+      caption: 'Figure 1 from “Physics Knowledge in Frontier Models: A Diagnostic Study of Failure Modes” (arXiv:2510.06251, 2025).',
     },
     links: [
       {

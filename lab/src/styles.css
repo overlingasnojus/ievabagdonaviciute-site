@@ -1542,23 +1542,38 @@ button {
   max-height: 44cqh;
 }
 
-/* MSR: a figure from the paper under the photo, sharing a row with the preprint link
-   so the doodled arrow always points straight across to it */
+/* MSR: a figure from the paper right under the photo; the text column stretches to
+   the same height and the preprint link sits at its foot, level with the doodled
+   arrow beside the figure */
 .rb-main-grid[data-paper-figure] {
-  row-gap: 2.4cqh;
+  align-items: stretch;
 }
 
-.rb-main-grid[data-paper-figure] > .rb-print:first-child .rb-img {
+.rb-print-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4cqh;
+  min-width: 0;
+}
+
+.rb-print-stack > .rb-print:first-child .rb-img {
   max-height: 40cqh;
 }
 
+.rb-main-grid[data-paper-figure] > .rb-text {
+  display: flex;
+  flex-direction: column;
+}
+
 .rb-callout-links {
-  align-self: center;
+  margin-top: auto;
+  padding-top: 1.6cqh;
+  padding-bottom: 3cqh;
 }
 
 .rb-callout {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 0.8cqw;
   margin-right: -2cqw;
@@ -1577,6 +1592,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-bottom: 2cqh;
   color: var(--raspberry);
   font-family: 'Caveat', var(--round);
   font-weight: 700;

@@ -324,26 +324,31 @@ function Detail({
   } else {
     content = (
       <div className="rb-main-grid" data-paper-figure={entry.image2 ? true : undefined}>
-        <Print img={entry.image} onView={onView} />
-        <article className="rb-text" aria-labelledby="rb-entry-title">
-          {heading}
-          <Body paragraphs={entry.body} />
-          <Topics topics={entry.topics} />
-          {!entry.image2 && <Links links={entry.links} />}
-        </article>
-        {entry.image2 && (
-          // a figure from the paper under the photo, with a doodled arrow straight across
-          // to the paper link, which shares its row
-          <>
+        {entry.image2 ? (
+          // a figure from the paper right under the photo, with a doodled arrow across
+          // to the paper link at the foot of the text column
+          <div className="rb-print-stack">
+            <Print img={entry.image} onView={onView} />
             <div className="rb-callout">
               <Print img={entry.image2} onView={onView} variant="thumb" tone="pink" tilt={0.6} />
               <PaperArrow />
             </div>
+          </div>
+        ) : (
+          <Print img={entry.image} onView={onView} />
+        )}
+        <article className="rb-text" aria-labelledby="rb-entry-title">
+          {heading}
+          <Body paragraphs={entry.body} />
+          <Topics topics={entry.topics} />
+          {entry.image2 ? (
             <div className="rb-callout-links">
               <Links links={entry.links} />
             </div>
-          </>
-        )}
+          ) : (
+            <Links links={entry.links} />
+          )}
+        </article>
       </div>
     );
   }
