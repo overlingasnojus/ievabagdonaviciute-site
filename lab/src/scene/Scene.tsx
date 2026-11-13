@@ -14,7 +14,6 @@ import { PlantDrone } from './PlantDrone';
 import { Projector } from './Projector';
 import { RobotArm } from './RobotArm';
 import { Room } from './Room';
-import { SurpriseDrawer } from './SurpriseDrawer';
 import { laptopTexture, smallCodeTexture } from './textures';
 import { WheeledRobot } from './WheeledRobot';
 import { Whiteboard } from './Whiteboard';
@@ -115,7 +114,6 @@ export default function Scene() {
       <RobotArm />
       <WheeledRobot />
       <PlantDrone />
-      <SurpriseDrawer />
       <Notebook />
       <Whiteboard />
       <Monitor textures={[small]} />

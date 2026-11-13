@@ -223,6 +223,23 @@ function Leg({ x, z, h = DESK.top - DESK.thickness }: { x: number; z: number; h?
   );
 }
 
+function Drawer3({ x0, x1, z, y0, y1 }: { x0: number; x1: number; z: number; y0: number; y1: number }) {
+  // Static drawer fronts with handles, for pedestals that don't open.
+  const n = 2;
+  const h = (y1 - y0) / n;
+  return (
+    <>
+      {Array.from({ length: n }, (_, i) => (
+        <group key={i}>
+          <Box size={[x1 - x0 - 0.06, h - 0.05, 0.04]} position={[(x0 + x1) / 2, y0 + h * (i + 0.5), z]} color={P.cream} />
+          <Box size={[x1 - x0 - 0.2, h - 0.19, 0.012]} position={[(x0 + x1) / 2, y0 + h * (i + 0.5), z + 0.024]} color="#F7EFE3" />
+          <Box size={[0.26, 0.035, 0.035]} position={[(x0 + x1) / 2, y0 + h * (i + 0.5) + h * 0.22, z + 0.05]} color="#B9B3BC" metal />
+        </group>
+      ))}
+    </>
+  );
+}
+
 function Desks() {
   const { a, b, top, thickness } = DESK;
   return (
@@ -244,7 +261,11 @@ function Desks() {
       <Leg x={a.x1 - 0.08} z={a.z1 - 0.08} />
       <Leg x={a.x0 + 0.08} z={a.z1 - 0.08} />
 
-      {/* the drawer pedestal under desk A is SurpriseDrawer (an easter egg) */}
+      {/* pedestal under desk A, near the front */}
+      <Box size={[1.2, top - thickness - 0.06, 1.0]} position={[a.x0 + 0.7, (top - thickness - 0.06) / 2 + 0.03, a.z1 - 0.62]} color={P.creamDark} />
+      <group rotation={[0, Math.PI / 2, 0]} position={[a.x0 + 1.32, 0, a.z1 - 0.62]}>
+        <Drawer3 x0={-0.48} x1={0.48} z={0} y0={0.06} y1={top - thickness - 0.02} />
+      </group>
 
       {/* storage box and books under desk B */}
       <Box size={[0.8, 0.45, 0.7]} position={[-3.6, 0.225, -4.5]} color={P.wine} />
