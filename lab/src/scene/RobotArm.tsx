@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { anim } from '../state/anim';
 import { takeEgg } from '../state/eggs';
 import { getNav } from '../state/nav';
-import { Bubble, EggTarget, Floaters, type FloatersApi, smooth as smoothClamped, windowed } from './eggParts';
+import { EggTarget, Floaters, type FloatersApi, smooth as smoothClamped } from './eggParts';
+import { HitBox } from './Interactive';
 import { DESK, PALETTE as P } from './layout';
 import { Blob, Box, Cyl } from './parts';
 import { heartSprite } from './textures';
@@ -51,11 +52,11 @@ const KEYS: [number, Pose][] = [
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const lerp = THREE.MathUtils.lerp;
 
-// Easter egg: click the arm and it says hi. It lifts its forearm in the plane facing
+// Easter egg: click the arm and it waves hi. It lifts its forearm in the plane facing
 // the viewer, waves (opening and closing the gripper like a little hand), twirls its
-// wrist, gives a small bow and sends up a few hearts, then eases back into whatever
+// wrist, gives a small bow and sends up a heart, then eases back into whatever
 // it was doing. The turret yaw stays near REST so the arm never swings toward the
-// wall shelf above it. With reduced motion only the bubble and hearts appear.
+// wall shelf above it. With reduced motion only the heart appears.
 const WAVE_END = 4.0;
 const WAVE_UP: Pose = { yaw: 0.9, shoulder: 0.55, elbow: -0.3, wrist: 0, roll: Math.PI / 2, grip: 0 };
 
@@ -122,9 +123,7 @@ export function RobotArm() {
   const wave = useRef<Pose>({ ...REST });
   const clock = useRef(0);
   const egg = useRef<{ t: number; reduced: boolean; hearts: boolean } | null>(null);
-  const bubble = useRef(0);
   const hearts = useRef<FloatersApi | null>(null);
-  const bubbleAt = useRef(new THREE.Vector3(-3.75, 3.55, -1.6)).current;
   const tmp = useRef(new THREE.Vector3()).current;
 
   useFrame((_, rawDt) => {
@@ -142,10 +141,8 @@ export function RobotArm() {
     const p = poseAt(clock.current, pose.current);
     for (const k of Object.keys(p) as (keyof Pose)[]) p[k] = lerp(REST[k], p[k], level);
 
-    let say = 0;
     if (e) {
       e.t += dt;
-      say = windowed(e.t, 0.3, 3.4, 0.2);
       if (!e.reduced) {
         const w = smooth(THREE.MathUtils.clamp(Math.min(e.t / 0.5, (WAVE_END - e.t) / 0.6), 0, 1));
         const q = wavePose(e.t, wave.current);
@@ -153,11 +150,10 @@ export function RobotArm() {
       }
       if (!e.hearts && e.t > (e.reduced ? 0.6 : 2.95)) {
         e.hearts = true;
-        if (tool.current) hearts.current?.emit(tool.current.getWorldPosition(tmp), 6);
+        if (tool.current) hearts.current?.emit(tool.current.getWorldPosition(tmp), 1);
       }
       if (e.t >= WAVE_END) egg.current = null;
     }
-    bubble.current = say;
 
     if (turret.current) turret.current.rotation.y = p.yaw;
     if (shoulder.current) shoulder.current.rotation.z = -p.shoulder;
@@ -170,11 +166,12 @@ export function RobotArm() {
 
   return (
     <>
-    <Bubble text="hi!" heart anchor={bubbleAt} show={bubble} />
-    <Floaters map={heartSprite()} colors={[P.raspberry, '#F28DB2', '#E8B4C2']} api={hearts} size={0.16} seed={9} />
+    <Floaters map={heartSprite()} colors={[P.raspberry]} api={hearts} size={0.32} rise={1.1} seed={9} />
     <EggTarget id="arm">
     <group position={[-4.25, DESK.top, -1.25]}>
       <Blob position={[0, 0.003, 0]} size={[0.9, 0.9]} />
+      {/* generous invisible click area around the arm's whole reach, so it's easy to hit */}
+      <HitBox size={[1.5, 2.35, 1.6]} position={[0.1, 1.17, -0.05]} />
       {/* base plate with bolts */}
       <Cyl r={0.3} h={0.06} position={[0, 0.03, 0]} color={JOINT} segments={20} metal />
       {[0, 1, 2, 3, 4, 5].map((i) => {

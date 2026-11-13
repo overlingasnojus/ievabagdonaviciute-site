@@ -643,16 +643,6 @@ export const heartSprite = memo(() =>
   }),
 );
 
-/** White pixel eighth note; sprites tint it. */
-export const noteSprite = memo(() =>
-  pixelTexture(6, 8, (ctx) => {
-    ctx.clearRect(0, 0, 6, 8);
-    const rows = ['..##..', '..#.#.', '..#..#', '..#...', '..#...', '.##...', '###...', '.#....'];
-    ctx.fillStyle = '#FFFFFF';
-    rows.forEach((r, j) => [...r].forEach((ch, i) => ch === '#' && ctx.fillRect(i, j, 1, 1)));
-  }),
-);
-
 const bubbles = new Map<string, THREE.CanvasTexture>();
 
 /** Pixel speech bubble with a tail at the bottom centre. Size in pixels is in `userData.px`. */

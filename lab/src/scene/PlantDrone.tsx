@@ -3,15 +3,13 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { takeEgg } from '../state/eggs';
 import { getNav } from '../state/nav';
-import { backOut, Bubble, EggTarget, Floaters, type FloatersApi, smooth, windowed } from './eggParts';
+import { backOut, EggTarget, smooth, windowed } from './eggParts';
 import { PALETTE as P } from './layout';
 import { Box, Cyl, Plant } from './parts';
-import { noteSprite } from './textures';
 
-// Easter egg: the monstera by the front of the room hides a tiny singing drone (a nod
-// to Ieva's singing). Click the plant: the leaves boing, the drone pops out, flies a
-// loop around the plant humming "la la" with music notes trailing behind, then dives
-// back into the leaves. With reduced motion it simply appears above the plant.
+// Easter egg: the monstera by the front of the room hides a tiny drone. Click the
+// plant: the leaves boing, the drone pops out, flies a loop around the plant, then
+// dives back into the leaves. With reduced motion it simply appears above the plant.
 
 const POS = new THREE.Vector3(0.55, 0, 4.0);
 const HIDE_Y = 0.75; // inside the leaves
@@ -28,16 +26,13 @@ export function PlantDrone() {
   const body = useRef<THREE.Group>(null);
   const rotors = useRef<THREE.Group[]>([]);
   const eyes = useRef<THREE.Group>(null);
-  const egg = useRef<{ t: number; reduced: boolean; nextNote: number } | null>(null);
-  const bubble = useRef(0);
-  const notes = useRef<FloatersApi | null>(null);
-  const bubbleAt = useRef(new THREE.Vector3()).current;
+  const egg = useRef<{ t: number; reduced: boolean } | null>(null);
   const pos = useRef(new THREE.Vector3()).current;
 
   useFrame(({ clock }, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
     const nav = getNav();
-    if (takeEgg('plant') && !egg.current && nav.phase === 'overview') egg.current = { t: 0, reduced: nav.reducedMotion, nextNote: 0.7 };
+    if (takeEgg('plant') && !egg.current && nav.phase === 'overview') egg.current = { t: 0, reduced: nav.reducedMotion };
     if (egg.current && nav.phase !== 'overview') egg.current = null;
     const e = egg.current;
 
@@ -75,15 +70,9 @@ export function PlantDrone() {
         pos.y = FLY_Y;
         scale = windowed(t, 0, T.end, 0.3);
       }
-      if (t > e.nextNote && t < T.back) {
-        e.nextNote += e.reduced ? 1.2 : 0.35;
-        notes.current?.emit(pos.clone().add(POS).add(new THREE.Vector3(0, 0.1, 0)), 1);
-      }
       if (t >= T.end) egg.current = null;
     }
 
-    bubble.current = e ? windowed(e.t, T.up, T.back, 0.2) : 0;
-    bubbleAt.copy(pos).add(POS).add(new THREE.Vector3(0, 0.5, 0));
 
     if (plant.current) {
       plant.current.scale.set(1 - boing * 0.05, 1 + boing * 0.09, 1 - boing * 0.05);
@@ -99,7 +88,7 @@ export function PlantDrone() {
       body.current.position.y = Math.sin(clock.elapsedTime * 9) * 0.015;
     }
     rotors.current.forEach((r, i) => r && (r.rotation.y += dt * (i % 2 ? -40 : 40)));
-    // happy squint (^ ^) while singing
+    // happy squint (^ ^) while flying
     if (eyes.current) eyes.current.scale.y = e && e.t > T.up ? 0.45 : 1;
   });
 
@@ -113,8 +102,6 @@ export function PlantDrone() {
   ];
   return (
     <>
-      <Bubble text="la la" heart anchor={bubbleAt} show={bubble} />
-      <Floaters map={noteSprite()} colors={[P.raspberry, P.burgundy, '#D99AAD', '#E59A5A']} api={notes} size={0.17} rise={0.8} seed={23} />
       <group position={POS.toArray()}>
         <EggTarget id="plant">
           <group ref={plant}>
