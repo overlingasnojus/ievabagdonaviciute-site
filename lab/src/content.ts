@@ -172,9 +172,9 @@ export const RESEARCH: ResearchEntry[] = [
         },
         {
           src: './research/corl-demo-team.jpg',
-          alt: 'Ieva in a red Stanford hoodie posing with a labmate under the Stanford NeuroAI Lab canopy at CoRL 2026',
+          alt: 'Ieva in a red Stanford hoodie posing with labmate Atlas Kazemian under the Stanford NeuroAI Lab canopy at CoRL 2026',
           kind: 'photo',
-          caption: 'At the Stanford NeuroAI Lab booth.',
+          caption: 'With Atlas Kazemian at the Stanford NeuroAI Lab booth.',
         },
       ],
     },
