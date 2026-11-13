@@ -77,6 +77,14 @@ function ProjectWindow({ project, closing, onClose }: { project: Project; closin
             </p>
           ))}
           {project.awards && <Badges awards={project.awards} />}
+          {project.image && (
+            <figure className="dt-figure">
+              <a href={project.image.src} target="_blank" rel="noopener noreferrer" aria-label={`Open the full-size poster for ${project.title} (new tab)`}>
+                <img src={project.image.src} alt={project.image.alt} loading="lazy" decoding="async" />
+              </a>
+              {project.image.caption && <figcaption>{project.image.caption}</figcaption>}
+            </figure>
+          )}
           {project.links && (
             <ul className="dt-links">
               {project.links.map((l) => (

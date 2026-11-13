@@ -65,6 +65,7 @@ const GLYPH_ROWS: Record<string, string[]> = {
   M: ['#.#', '###', '###', '#.#', '#.#'], O: ['.#.', '#.#', '#.#', '#.#', '.#.'], P: ['##.', '#.#', '##.', '#..', '#..'],
   R: ['##.', '#.#', '##.', '#.#', '#.#'], S: ['.##', '#..', '.#.', '..#', '##.'], T: ['###', '.#.', '.#.', '.#.', '.#.'],
   W: ['#.#', '#.#', '###', '###', '#.#'], U: ['#.#', '#.#', '#.#', '#.#', '###'],
+  '!': ['.#.', '.#.', '.#.', '...', '.#.'],
 };
 const GLYPHS = Object.fromEntries(Object.entries(GLYPH_ROWS).map(([k, rows]) => [k, rows.join('')]));
 
@@ -631,3 +632,62 @@ export const heartEyeTexture = memo(() =>
     pixelHeart(ctx, 0, 0, 1, '#F28DB2');
   }),
 );
+
+// --- easter eggs -----------------------------------------------------------------
+
+/** White pixel heart; sprites tint it. */
+export const heartSprite = memo(() =>
+  pixelTexture(7, 6, (ctx) => {
+    ctx.clearRect(0, 0, 7, 6);
+    pixelHeart(ctx, 0, 0, 1, '#FFFFFF');
+  }),
+);
+
+/** White pixel eighth note; sprites tint it. */
+export const noteSprite = memo(() =>
+  pixelTexture(6, 8, (ctx) => {
+    ctx.clearRect(0, 0, 6, 8);
+    const rows = ['..##..', '..#.#.', '..#..#', '..#...', '..#...', '.##...', '###...', '.#....'];
+    ctx.fillStyle = '#FFFFFF';
+    rows.forEach((r, j) => [...r].forEach((ch, i) => ch === '#' && ctx.fillRect(i, j, 1, 1)));
+  }),
+);
+
+const bubbles = new Map<string, THREE.CanvasTexture>();
+
+/** Pixel speech bubble with a tail at the bottom centre. Size in pixels is in `userData.px`. */
+export function bubbleTexture(text: string, heart = false) {
+  const key = `${text}|${heart}`;
+  let tex = bubbles.get(key);
+  if (tex) return tex;
+  const pad = 3;
+  const tw = text.length * 4 - 1;
+  const inner = tw + (heart ? 9 : 0);
+  const W = inner + pad * 2 + 2;
+  const bodyH = 6 + pad * 2 + 2;
+  const H = bodyH + 2;
+  const fill = '#FFFBF6';
+  const line = P.burgundy;
+  tex = pixelTexture(W, H, (ctx) => {
+    ctx.clearRect(0, 0, W, H);
+    // body with clipped pixel corners
+    px(ctx, 1, 0, W - 2, bodyH, line);
+    px(ctx, 0, 1, W, bodyH - 2, line);
+    px(ctx, 2, 1, W - 4, bodyH - 2, fill);
+    px(ctx, 1, 2, W - 2, bodyH - 4, fill);
+    // tail
+    const cx = Math.floor(W / 2);
+    px(ctx, cx - 2, bodyH - 1, 4, 1, fill);
+    px(ctx, cx - 3, bodyH - 1, 1, 1, line);
+    px(ctx, cx + 2, bodyH - 1, 1, 1, line);
+    px(ctx, cx - 1, bodyH, 2, 1, fill);
+    px(ctx, cx - 2, bodyH, 1, 1, line);
+    px(ctx, cx + 1, bodyH, 1, 1, line);
+    px(ctx, cx - 1, bodyH + 1, 2, 1, line);
+    pixelText(ctx, text, 1 + pad, 1 + pad + 1, 1, line);
+    if (heart) pixelHeart(ctx, 1 + pad + tw + 2, 1 + pad, 1, P.raspberry);
+  });
+  tex.userData.px = [W, H];
+  bubbles.set(key, tex);
+  return tex;
+}

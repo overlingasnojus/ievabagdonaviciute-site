@@ -346,6 +346,8 @@ export interface Project {
   awards?: string[];
   sections?: ProjectSection[];
   links?: ResearchLink[];
+  /** A poster or photo shown whole under the text; clicking it opens the full image. */
+  image?: { src: string; alt: string; caption?: string };
 }
 
 export const PROJECTS: Project[] = [
@@ -371,6 +373,11 @@ export const PROJECTS: Project[] = [
       'The project earned **2nd place in Most Industry Impact** and **3rd place in Chevron Environmental and Sustainability Efforts**.',
     ],
     awards: ['2nd place · Most Industry Impact', '3rd place · Chevron Environmental and Sustainability Efforts'],
+    image: {
+      src: './projects/flower-power.jpg',
+      alt: 'Solar Flower Power poster by Women in Electrical & Computer Engineering: hardware drawings of the solar panel frame, the Arduino and servo circuit, screenshots of the sunflower-themed mobile app, and the team list',
+      caption: 'Our poster at UIUC Engineering Open House 2024.',
+    },
   },
   {
     id: 'sunday',
@@ -382,6 +389,11 @@ export const PROJECTS: Project[] = [
     body: [
       'I collaborated on a **six-DOF robotic arm** controlled through a **Flutter mobile app**, connecting an Arduino UNO and six servo motors through HC-05 Bluetooth.',
     ],
+    image: {
+      src: './projects/robot-sunday.jpg',
+      alt: 'Meet S.U.N.D.A.Y., our robotic arm: poster by Women in Electrical & Computer Engineering with the Bluetooth and Arduino hardware diagram, the Flutter control app with joint sliders, a photo of the black six-servo arm, and the team list',
+      caption: 'Our poster at UIUC Engineering Open House 2023.',
+    },
   },
   {
     id: 'gdsc',

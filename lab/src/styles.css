@@ -2709,3 +2709,48 @@ button {
   width: 62% !important;
   justify-self: center;
 }
+
+/* project poster: shown whole, opens full size in a new tab */
+.dt-figure {
+  max-width: 62ch;
+  margin: 1.1em 0 0.4em;
+}
+
+.dt-figure a {
+  display: block;
+  border: 2px solid var(--burgundy);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fffbf6;
+  box-shadow: 3px 3px 0 rgba(82, 11, 45, 0.18);
+  cursor: zoom-in;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dt-figure a:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(82, 11, 45, 0.24);
+}
+
+.dt-figure a:focus-visible {
+  outline: 2px solid var(--raspberry);
+  outline-offset: 3px;
+}
+
+.dt-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.dt-figure figcaption {
+  margin-top: 0.5em;
+  font-size: clamp(11px, 1.15cqw, 14px);
+  color: #7a4a5e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-figure a {
+    transition: none;
+  }
+}

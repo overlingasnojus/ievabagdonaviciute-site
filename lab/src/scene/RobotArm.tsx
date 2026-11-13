@@ -2,8 +2,12 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { anim } from '../state/anim';
+import { takeEgg } from '../state/eggs';
+import { getNav } from '../state/nav';
+import { Bubble, EggTarget, Floaters, type FloatersApi, smooth as smoothClamped, windowed } from './eggParts';
 import { DESK, PALETTE as P } from './layout';
 import { Blob, Box, Cyl } from './parts';
+import { heartSprite } from './textures';
 
 // A desktop six-axis arm on desk A. Every movement happens at a joint pivot:
 // turret yaw → shoulder pitch → elbow pitch → wrist pitch → wrist roll → gripper.
@@ -47,6 +51,30 @@ const KEYS: [number, Pose][] = [
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const lerp = THREE.MathUtils.lerp;
 
+// Easter egg: click the arm and it says hi. It lifts its forearm in the plane facing
+// the viewer, waves (opening and closing the gripper like a little hand), twirls its
+// wrist, gives a small bow and sends up a few hearts, then eases back into whatever
+// it was doing. The turret yaw stays near REST so the arm never swings toward the
+// wall shelf above it. With reduced motion only the bubble and hearts appear.
+const WAVE_END = 4.0;
+const WAVE_UP: Pose = { yaw: 0.9, shoulder: 0.55, elbow: -0.3, wrist: 0, roll: Math.PI / 2, grip: 0 };
+
+function wavePose(t: number, out: Pose) {
+  Object.assign(out, WAVE_UP);
+  if (t > 0.45 && t < 2.3) {
+    const k = (t - 0.45) * Math.PI * 2 * 1.5;
+    const amp = smoothClamped((t - 0.45) / 0.2) * smoothClamped((2.3 - t) / 0.2);
+    out.wrist = Math.sin(k) * 0.6 * amp;
+    out.elbow += Math.sin(k) * 0.14 * amp;
+    out.grip = (0.5 - 0.5 * Math.cos(k * 2)) * amp;
+  }
+  // happy wrist twirl
+  out.roll += Math.PI * 2 * smooth(THREE.MathUtils.clamp((t - 2.3) / 0.7, 0, 1));
+  // a small bow
+  if (t > 3.0 && t < 3.5) out.shoulder += Math.sin(((t - 3.0) / 0.5) * Math.PI) * 0.3;
+  return out;
+}
+
 function poseAt(time: number, out: Pose) {
   const t = time % CYCLE;
   let i = 0;
@@ -89,25 +117,62 @@ export function RobotArm() {
   const wrist = useRef<THREE.Group>(null);
   const roll = useRef<THREE.Group>(null);
   const fingers = useRef<THREE.Group[]>([]);
+  const tool = useRef<THREE.Group>(null);
   const pose = useRef<Pose>({ ...REST });
+  const wave = useRef<Pose>({ ...REST });
   const clock = useRef(0);
+  const egg = useRef<{ t: number; reduced: boolean; hearts: boolean } | null>(null);
+  const bubble = useRef(0);
+  const hearts = useRef<FloatersApi | null>(null);
+  const bubbleAt = useRef(new THREE.Vector3(-3.75, 3.55, -1.6)).current;
+  const tmp = useRef(new THREE.Vector3()).current;
 
-  useFrame((_, dt) => {
+  useFrame((_, rawDt) => {
+    const dt = Math.min(rawDt, 0.05);
+    const nav = getNav();
+    if (takeEgg('arm') && !egg.current && nav.phase === 'overview') egg.current = { t: 0, reduced: nav.reducedMotion, hearts: false };
+    if (egg.current && nav.phase !== 'overview') egg.current = null;
+    const e = egg.current;
+
     const level = anim.ambient.level;
     // Time only advances while the room is lively, so the demo pauses mid-way and the
-    // blend toward REST settles the arm smoothly when a section opens.
-    clock.current += dt * level;
+    // blend toward REST settles the arm smoothly when a section opens. It also holds
+    // still while the arm is saying hi, and picks up where it left off afterwards.
+    if (!e) clock.current += dt * level;
     const p = poseAt(clock.current, pose.current);
-    if (turret.current) turret.current.rotation.y = lerp(REST.yaw, p.yaw, level);
-    if (shoulder.current) shoulder.current.rotation.z = -lerp(REST.shoulder, p.shoulder, level);
-    if (elbow.current) elbow.current.rotation.z = -lerp(REST.elbow, p.elbow, level);
-    if (wrist.current) wrist.current.rotation.z = -lerp(REST.wrist, p.wrist, level);
-    if (roll.current) roll.current.rotation.y = lerp(REST.roll, p.roll, level);
-    const open = 0.075 - 0.045 * p.grip * level;
+    for (const k of Object.keys(p) as (keyof Pose)[]) p[k] = lerp(REST[k], p[k], level);
+
+    let say = 0;
+    if (e) {
+      e.t += dt;
+      say = windowed(e.t, 0.3, 3.4, 0.2);
+      if (!e.reduced) {
+        const w = smooth(THREE.MathUtils.clamp(Math.min(e.t / 0.5, (WAVE_END - e.t) / 0.6), 0, 1));
+        const q = wavePose(e.t, wave.current);
+        for (const k of Object.keys(p) as (keyof Pose)[]) p[k] = lerp(p[k], q[k], w);
+      }
+      if (!e.hearts && e.t > (e.reduced ? 0.6 : 2.95)) {
+        e.hearts = true;
+        if (tool.current) hearts.current?.emit(tool.current.getWorldPosition(tmp), 6);
+      }
+      if (e.t >= WAVE_END) egg.current = null;
+    }
+    bubble.current = say;
+
+    if (turret.current) turret.current.rotation.y = p.yaw;
+    if (shoulder.current) shoulder.current.rotation.z = -p.shoulder;
+    if (elbow.current) elbow.current.rotation.z = -p.elbow;
+    if (wrist.current) wrist.current.rotation.z = -p.wrist;
+    if (roll.current) roll.current.rotation.y = p.roll;
+    const open = 0.075 - 0.045 * p.grip;
     fingers.current.forEach((f, i) => f && (f.position.z = (i ? 1 : -1) * open));
   });
 
   return (
+    <>
+    <Bubble text="hi!" heart anchor={bubbleAt} show={bubble} />
+    <Floaters map={heartSprite()} colors={[P.raspberry, '#F28DB2', '#E8B4C2']} api={hearts} size={0.16} seed={9} />
+    <EggTarget id="arm">
     <group position={[-4.25, DESK.top, -1.25]}>
       <Blob position={[0, 0.003, 0]} size={[0.9, 0.9]} />
       {/* base plate with bolts */}
@@ -134,6 +199,7 @@ export function RobotArm() {
                 <Cyl r={0.07} h={0.16} position={[0, 0.09, 0]} color={WHITE} segments={14} />
                 <Cyl r={0.075} h={0.025} position={[0, 0.18, 0]} color={ACCENT} segments={14} />
                 <Box size={[0.12, 0.05, 0.22]} position={[0, 0.215, 0]} color={JOINT} metal />
+                <group ref={tool} position={[0, 0.42, 0]} />
                 {[0, 1].map((i) => (
                   <group key={i} ref={(g) => void (g && (fingers.current[i] = g))} position={[0, 0.24, (i ? 1 : -1) * 0.075]}>
                     <Box size={[0.05, 0.16, 0.025]} position={[0, 0.08, 0]} color="#B9B3BC" metal />
@@ -149,5 +215,7 @@ export function RobotArm() {
       <Box size={[0.4, 0.02, 0.4]} position={[0.55, 0.01, 0.55]} color="#D8D2D9" metal />
       <Box size={[0.16, 0.16, 0.16]} position={[0.55, 0.1, 0.55]} color={P.raspberry} roughness={0.55} />
     </group>
+    </EggTarget>
+    </>
   );
 }
